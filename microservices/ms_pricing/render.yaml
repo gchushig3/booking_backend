@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: ms-pricing
+    runtime: node
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start:prod
+    envVars:
+      - key: GRPC_PORT
+        sync: false

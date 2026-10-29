@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package pricing;
+
+import "google/protobuf/empty.proto";
+
+// Mensaje de solicitud de precio para una tarifa (atraccion turistica)
+message PrecioRequest {
+  // Identificador de la tarifa (convenio: "tar_id")
+  int32 tarId = 1;
+}
+
+// Respuesta con el detalle del precio
+message PrecioResponse {
+  int32 tarId = 1;
+  int32 atrId = 2;
+  string tarTipo = 3;
+  double tarPrecio = 4;
+  string tarMoneda = 5;
+}
+
+// Solicitud para filtrar precios por tipo de tarifa
+message PrecioPorTipoRequest {
+  string tarTipo = 1;
+}
+
+service PricingService {
+  // RPC 1: Consulta puntual de precio (Unary)
+  rpc ObtenerPrecio (PrecioRequest) returns (PrecioResponse);
+
+  // RPC 2: Streaming de lista de precios (Server Streaming)
+  rpc ListarPrecios (google.protobuf.Empty) returns (stream PrecioResponse);
+
+  // RPC 3: Streaming de precios filtrados por tipo de tarifa
+  rpc ListarPreciosPorTipo (PrecioPorTipoRequest) returns (stream PrecioResponse);
+}
