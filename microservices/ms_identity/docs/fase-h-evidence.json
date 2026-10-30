@@ -1,0 +1,42 @@
+{
+  "phase": "H",
+  "checked_at_utc": "2026-10-30T01:24:58.358Z",
+  "status": "passed",
+  "read_only_checks": true,
+  "base_url": "http://127.0.0.1:3011",
+  "http_checks": [
+    { "path": "/api/v2/health/live", "method": "GET", "status": 200 },
+    { "path": "/api/v2/health/ready", "method": "GET", "status": 200 },
+    { "path": "/api/docs", "method": "GET", "status": 200 },
+    { "path": "/api/docs-json", "method": "GET", "status": 200 },
+    { "path": "/api/docs-yaml", "method": "GET", "status": 200 },
+    { "path": "/api/v2/auth/me", "method": "GET", "status": 401 },
+    { "path": "/api/v2/users", "method": "GET", "status": 401 },
+    { "path": "/api/v2/roles", "method": "GET", "status": 401 },
+    { "path": "/api/v2/auth/login", "method": "POST", "status": 400 }
+  ],
+  "jwks_public_only": true,
+  "rsa_minimum_bits": 3072,
+  "openapi_operations": 25,
+  "database": {
+    "database": "ms_identity",
+    "postgres": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "users": 0,
+    "sessions": 0,
+    "tokens": 0,
+    "assignments": 0,
+    "active_roles": 3,
+    "tables": 5,
+    "domains": 3,
+    "view": true
+  },
+  "schema_sha256": "84fa0e694dece975a098b4d22b725b589fb94fe0f071d8f4872740a2ddedb204",
+  "tests_reference": {
+    "file": "docs/fase-g-evidence.json",
+    "status": "passed",
+    "total_tests": 111,
+    "finished_at_utc": "2026-10-30T01:17:41.893Z"
+  },
+  "created_permanent_accounts": false,
+  "deployment_performed": false
+}

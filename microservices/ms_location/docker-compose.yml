@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pg_ms_location
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ms_location
+    ports:
+      - '5435:5432'
+    volumes:
+      - pg_ms_location_data:/var/lib/postgresql/data
+      - ./init-location.sql:/docker-entrypoint-initdb.d/02_ms_location.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d ms_location']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_ms_location_data:

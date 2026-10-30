@@ -1,0 +1,16 @@
+{
+  "checked_at_utc": "2026-10-29T23:53:09.294Z",
+  "phase": "F",
+  "base_url": "http://127.0.0.1:3011",
+  "swagger_public": true,
+  "local_assets": true,
+  "bearer_not_persisted": true,
+  "external_validator_disabled": true,
+  "openapi": "3.0.0",
+  "operations": 25,
+  "json_yaml_valid_and_synchronized": true,
+  "correlation_header": true,
+  "protected_routes_require_jwt": true,
+  "login_public_validation": true,
+  "postgres_ready": true
+}

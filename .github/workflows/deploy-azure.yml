@@ -1,0 +1,47 @@
+name: Deploy ms-catalog (Atracciones) to Azure App Service
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - 'microservices/ms-catalog/**'
+      - 'microservices/shared-infrastructure/**'
+      - 'contracts/inventory.proto'
+      - '.github/workflows/deploy-azure.yml'
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: booking-atracciones-api
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Build shared-infrastructure
+        working-directory: microservices/shared-infrastructure
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build ms-catalog
+        working-directory: microservices/ms-catalog
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Package deploy.zip
+        working-directory: microservices/ms-catalog
+        run: python3 scripts/package-azure.py
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: microservices/ms-catalog/deploy.zip

@@ -1,0 +1,29 @@
+{
+  "checked_at_utc": "2026-10-29T01:15:46.344Z",
+  "phase": "B",
+  "base_url": "http://127.0.0.1:3011",
+  "mailpit_url": "http://127.0.0.1:8025",
+  "app_image": "sha256:ca3fdfdf281605dfa6a8c048ca1513e669a7d340766a7697c9cae5e2268df764",
+  "node_runtime": "v24.22.2",
+  "postgres_before": {
+    "database": "ms_identity",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": 0,
+    "domains": 0
+  },
+  "postgres_after": {
+    "database": "ms_identity",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": 0,
+    "domains": 0
+  },
+  "persistent_volumes": ["ms-identity_identity-postgres-data"],
+  "health_http": true,
+  "smtp_capture_and_fixture_cleanup": true,
+  "restart_verified": true,
+  "non_root": true,
+  "read_only_rootfs": true,
+  "schema_not_initialized": true,
+  "authentication_implemented": false,
+  "containers_left_running": true
+}

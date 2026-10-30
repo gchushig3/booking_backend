@@ -1,0 +1,82 @@
+{
+  "phase": "H",
+  "checked_at_utc": "2026-10-28T19:54:18.927Z",
+  "base_url": "http://127.0.0.1:3014",
+  "docker_server": "29.8.0",
+  "compose": "5.5.1",
+  "app_node": "v24.22.1",
+  "app_image": "sha256:6da5375b3dc0b280e1193c197ec066e2be5803e62a35964c7c82f62249739e00",
+  "non_root": true,
+  "read_only_rootfs": true,
+  "dropped_capabilities": ["ALL"],
+  "no_new_privileges": true,
+  "no_env_files_in_image": true,
+  "postgres_before": {
+    "database": "ms_catalog",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": [
+      "atraccion",
+      "atraccion_categoria",
+      "atraccion_foto",
+      "atraccion_idioma",
+      "atraccion_inclusion",
+      "categoria",
+      "idioma",
+      "inclusion",
+      "operador",
+      "operador_usuario"
+    ],
+    "domains": 4,
+    "view": true,
+    "operators": 0,
+    "attractions": 0,
+    "categories": 6,
+    "languages": 4,
+    "seed_languages": ["de", "en", "es", "fr"],
+    "seed_categories": [
+      "aventura",
+      "cultural",
+      "gastronomia",
+      "montana",
+      "naturales",
+      "playas"
+    ]
+  },
+  "postgres_after": {
+    "database": "ms_catalog",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": [
+      "atraccion",
+      "atraccion_categoria",
+      "atraccion_foto",
+      "atraccion_idioma",
+      "atraccion_inclusion",
+      "categoria",
+      "idioma",
+      "inclusion",
+      "operador",
+      "operador_usuario"
+    ],
+    "domains": 4,
+    "view": true,
+    "operators": 0,
+    "attractions": 0,
+    "categories": 6,
+    "languages": 4,
+    "seed_languages": ["de", "en", "es", "fr"],
+    "seed_categories": [
+      "aventura",
+      "cultural",
+      "gastronomia",
+      "montana",
+      "naturales",
+      "playas"
+    ]
+  },
+  "persistent_volume": "ms-catalog_catalog-postgres-data",
+  "swagger_matches_export": true,
+  "protected_http_operations_checked": 30,
+  "invalid_optional_filters_checked": 4,
+  "http_verified_before_and_after_restart": true,
+  "containers_left_running": true
+}

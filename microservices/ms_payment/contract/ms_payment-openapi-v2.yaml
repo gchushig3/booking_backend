@@ -1,0 +1,534 @@
+openapi: 3.0.3
+info:
+  title: Descubre EC - Payment Service (simulado)
+  version: 2.0.0
+  description: |
+    CONTRATO PROPUESTO, NO OFICIAL. Version publica REST v2. API de registro y simulacion de pagos
+    exclusivamente para desarrollo local y pruebas. No mueve dinero, no usa
+    pasarelas reales y esta prohibida en produccion. Persistencia en PostgreSQL
+    ms_payment segun 02_microservicios_v2_bases_de_datos.sql, sin modificar su
+    DDL. Las rutas y reglas de negocio son decisiones propuestas; no provienen
+    de atracciones-openapi-v3.yaml.
+
+    El cliente proporciona pag_numero (identificador de intento unico) para
+    prevenir duplicados. No se promete idempotencia por cabecera, porque el
+    esquema SQL no dispone de una tabla o columna de claves de idempotencia.
+    Reintentos con el mismo pag_numero y la misma solicitud devuelven 200;
+    con datos diferentes, 409. La implementacion debe comparar el intento
+    persistido, resolver carreras por la restriccion UNIQUE y no repetir
+    efectos de negocio.
+
+    La simulacion requiere habilitacion explicita en la configuracion y solo
+    puede habilitarse en desarrollo local o pruebas; nunca debe habilitarse en
+    produccion. El modo local no valida que una orden exista, su estado, total
+    o moneda. La integracion con ms_order mediante gRPC esta pendiente de
+    definicion y no forma parte de este contrato.
+
+    Swagger UI en /api/docs es documentacion local, no una consola segura de produccion.
+    Las 12 operaciones funcionan actualmente SIN autenticacion ni autorizacion HTTP.
+    El esquema Bearer JWT y el permiso payment:simulate son propuestas
+    contractuales. La infraestructura de autenticacion y autorizacion aun no
+    esta implementada. No se aceptan ni exponen numeros completos de tarjeta,
+    CVV, credenciales bancarias ni credenciales o tokens de pasarelas reales.
+servers:
+  - url: http://localhost:3000/api/v2
+    description: Desarrollo local (puerto configurable)
+security:
+  - BearerAuth: []
+tags:
+  - name: MetodosPago
+    description: Catalogo de metodos existente en SQL
+  - name: EstadosPago
+    description: Catalogo de estados existente en SQL
+  - name: Pagos
+    description: Registro y consulta de intentos de pago
+  - name: Simulaciones
+    description: Resolucion simulada de intentos pendientes
+  - name: DetallesPago
+    description: Datos no sensibles de tarjeta o transferencia
+paths:
+  /metodos-pago:
+    get:
+      tags: [MetodosPago]
+      operationId: listarMetodosPago
+      summary: Listar metodos de pago
+      parameters:
+        - name: activo
+          in: query
+          description: Filtrar por mpa_activo; si se omite se devuelven todos
+          schema: {type: boolean}
+      responses:
+        '200':
+          description: Catalogo de metodos
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/MetodoPago'}}
+        '400': {$ref: '#/components/responses/BadRequest'}
+  /metodos-pago/{id}:
+    get:
+      tags: [MetodosPago]
+      operationId: obtenerMetodoPago
+      summary: Consultar un metodo por ID
+      parameters:
+        - {$ref: '#/components/parameters/SmallId'}
+      responses:
+        '200':
+          description: Metodo encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/MetodoPago'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /estados-pago:
+    get:
+      tags: [EstadosPago]
+      operationId: listarEstadosPago
+      summary: Listar estados de pago
+      responses:
+        '200':
+          description: Catalogo de estados
+          content:
+            application/json:
+              schema: {type: array, items: {$ref: '#/components/schemas/EstadoPago'}}
+  /estados-pago/{id}:
+    get:
+      tags: [EstadosPago]
+      operationId: obtenerEstadoPago
+      summary: Consultar un estado por ID
+      parameters:
+        - {$ref: '#/components/parameters/SmallId'}
+      responses:
+        '200':
+          description: Estado encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/EstadoPago'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /pagos:
+    post:
+      tags: [Pagos]
+      operationId: crearPago
+      summary: Registrar intento de pago pendiente
+      description: |
+        El servidor resuelve mpa_id desde metodo_codigo y est_id desde PENDIENTE.
+        pag_numero es proporcionado por el cliente, unico y estable para reintentos.
+        Solo se aceptan codigos existentes y activos; codigos inexistentes o
+        metodos inactivos producen 422. Este endpoint funciona en modo de
+        simulacion local y no valida una orden real ni confirma que el importe
+        corresponda a ella. La integracion gRPC con ms_order esta pendiente.
+        La respuesta identifica el modo y que la orden no fue validada. No se
+        cobra dinero.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CrearPagoRequest'}
+      responses:
+        '201':
+          description: Intento creado
+          headers:
+            Location:
+              description: Ruta relativa del recurso
+              schema: {type: string, example: /api/v2/pagos/1}
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Pago'}
+        '200':
+          description: Reintento exacto del mismo pag_numero y solicitud; sin efectos adicionales
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Pago'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+    get:
+      tags: [Pagos]
+      operationId: listarPagos
+      summary: Consultar pagos
+      description: Resultados ordenados por pag_fecha DESC, pag_id DESC.
+      parameters:
+        - name: ord_id
+          in: query
+          schema: {$ref: '#/components/schemas/BigId'}
+        - name: estado
+          in: query
+          description: Codigo SQL del estado
+          schema: {$ref: '#/components/schemas/CodigoEstado'}
+        - name: metodo
+          in: query
+          description: Codigo SQL del metodo
+          schema: {$ref: '#/components/schemas/CodigoMetodo'}
+        - name: limit
+          in: query
+          schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+        - name: offset
+          in: query
+          schema: {type: integer, minimum: 0, default: 0}
+      responses:
+        '200':
+          description: Pagina de pagos; total es el numero filtrado antes de limit y offset
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/PaginaPagos'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+  /pagos/{id}:
+    get:
+      tags: [Pagos]
+      operationId: obtenerPago
+      summary: Consultar un pago por ID
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      responses:
+        '200':
+          description: Pago encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Pago'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /pagos/{id}/simulaciones:
+    post:
+      tags: [Simulaciones]
+      operationId: simularResultadoPago
+      summary: Simular resultado de un intento pendiente
+      description: |
+        Requiere el permiso payment:simulate. Solo se permite si la simulacion
+        fue habilitada explicitamente en desarrollo local o pruebas; esta
+        prohibida en produccion. Unicamente se permite la transicion
+        PENDIENTE -> APROBADO, RECHAZADO o FALLIDO, una sola vez. No hay
+        transiciones posteriores. Intentar simular un pago ya finalizado
+        devuelve 409; carreras concurrentes que no puedan aplicar la transicion
+        tambien devuelven 409.
+
+        APROBADO establece pag_aprobado_en. RECHAZADO y FALLIDO establecen
+        pag_rechazado_en, que registra la finalizacion no aprobada, y requieren
+        motivo. Para simular un pago cuyo metodo es TARJETA debe existir antes
+        un detalle de tarjeta. El detalle de transferencia es opcional.
+        El indice unico parcial del SQL impide mas de un pago aprobado por orden.
+        La orden no se valida contra ms_order en modo local. No se realiza cobro.
+      x-required-permission: payment:simulate
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/SimularPagoRequest'}
+      responses:
+        '200':
+          description: Resultado simulado y pago actualizado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Pago'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '403': {$ref: '#/components/responses/Forbidden'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+  /pagos/{id}/tarjeta:
+    post:
+      tags: [DetallesPago]
+      operationId: registrarDetalleTarjeta
+      summary: Registrar datos no sensibles de tarjeta
+      description: |
+        Solo si el pago esta PENDIENTE y el metodo es TARJETA.
+        Una sola fila de pago_tarjeta por pago. Un detalle existente produce
+        409, incluso si el contenido nuevo es identico. Este detalle es
+        obligatorio antes de simular un pago TARJETA. Solo se aceptan datos
+        ficticios/no sensibles: nunca numero completo de tarjeta, PAN, CVV,
+        credenciales bancarias ni credenciales de pasarela. No valida ni
+        autoriza tarjetas reales.
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CrearDetalleTarjetaRequest'}
+      responses:
+        '201':
+          description: Detalle registrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DetalleTarjeta'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+    get:
+      tags: [DetallesPago]
+      operationId: obtenerDetalleTarjeta
+      summary: Consultar datos no sensibles de tarjeta
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      responses:
+        '200':
+          description: Detalle de tarjeta
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DetalleTarjeta'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+  /pagos/{id}/transferencia:
+    post:
+      tags: [DetallesPago]
+      operationId: registrarDetalleTransferencia
+      summary: Registrar comprobante de transferencia simulada
+      description: |
+        Solo si el pago esta PENDIENTE y el metodo es TRANSFERENCIA.
+        Una sola fila de pago_transferencia por pago. archivo_adjunto es
+        una referencia textual, no un endpoint de carga de archivos. El detalle
+        es opcional para simular el pago. Un detalle existente produce 409,
+        incluso si el contenido nuevo es identico. No incluir numeros de cuenta,
+        credenciales bancarias ni otros datos financieros sensibles.
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/CrearDetalleTransferenciaRequest'}
+      responses:
+        '201':
+          description: Comprobante registrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DetalleTransferencia'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {$ref: '#/components/responses/Conflict'}
+        '422': {$ref: '#/components/responses/Unprocessable'}
+    get:
+      tags: [DetallesPago]
+      operationId: obtenerDetalleTransferencia
+      summary: Consultar comprobante de transferencia
+      parameters:
+        - {$ref: '#/components/parameters/BigPathId'}
+      responses:
+        '200':
+          description: Comprobante encontrado
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/DetalleTransferencia'}
+        '400': {$ref: '#/components/responses/BadRequest'}
+        '404': {$ref: '#/components/responses/NotFound'}
+components:
+  parameters:
+    BigPathId:
+      name: id
+      in: path
+      required: true
+      description: ID BIGINT representado como cadena decimal para preservar precision
+      schema: {$ref: '#/components/schemas/BigId'}
+    SmallId:
+      name: id
+      in: path
+      required: true
+      schema: {type: integer, minimum: 1, maximum: 32767}
+  schemas:
+    BigId:
+      type: string
+      minLength: 1
+      pattern: '^(?:[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$'
+      maxLength: 19
+      example: '42'
+      description: Entero positivo entre 1 y 9223372036854775807, compatible con BIGINT y serializado como string
+    Importe:
+      type: string
+      pattern: '^(?:0\.(?:0[1-9]|[1-9][0-9])|[1-9][0-9]{0,9}\.[0-9]{2})$'
+      description: String decimal mayor que cero y hasta 9999999999.99, con exactamente dos decimales, compatible con NUMERIC(12,2). No se aceptan numeros JSON.
+      example: '125.50'
+    CodigoMetodo:
+      type: string
+      enum: [TARJETA, TRANSFERENCIA, EN_SITIO, PAYPHAL]
+      description: Codigos EXACTOS del seed SQL, incluido PAYPHAL
+    CodigoEstado:
+      type: string
+      enum: [PENDIENTE, APROBADO, RECHAZADO, FALLIDO]
+    MetodoPago:
+      type: object
+      required: [id, codigo, nombre, requiere_datos, activo]
+      properties:
+        id: {type: integer, minimum: 1, maximum: 32767}
+        codigo: {$ref: '#/components/schemas/CodigoMetodo'}
+        nombre: {type: string, maxLength: 60}
+        requiere_datos: {type: boolean}
+        activo: {type: boolean}
+    EstadoPago:
+      type: object
+      required: [id, codigo, nombre, final]
+      properties:
+        id: {type: integer, minimum: 1, maximum: 32767}
+        codigo: {$ref: '#/components/schemas/CodigoEstado'}
+        nombre: {type: string, maxLength: 50}
+        final: {type: boolean}
+    CrearPagoRequest:
+      type: object
+      additionalProperties: false
+      required: [numero, orden_id, metodo_codigo, monto]
+      properties:
+        numero:
+          type: string
+          minLength: 1
+          maxLength: 30
+          example: PAY-DEMO-000001
+          description: Identificador unico de intento, generado por cliente
+        orden_id: {$ref: '#/components/schemas/BigId'}
+        metodo_codigo: {$ref: '#/components/schemas/CodigoMetodo'}
+        monto: {$ref: '#/components/schemas/Importe'}
+    Pago:
+      type: object
+      required: [id, numero, orden_id, metodo, estado, monto, fecha, creado_en, modo_simulacion, orden_validacion]
+      properties:
+        id: {$ref: '#/components/schemas/BigId'}
+        numero: {type: string, maxLength: 30}
+        orden_id: {$ref: '#/components/schemas/BigId'}
+        metodo: {$ref: '#/components/schemas/MetodoPago'}
+        estado: {$ref: '#/components/schemas/EstadoPago'}
+        monto: {$ref: '#/components/schemas/Importe'}
+        referencia: {type: string, maxLength: 100, nullable: true}
+        autorizacion: {type: string, maxLength: 100, nullable: true}
+        fecha: {type: string, format: date-time}
+        aprobado_en: {type: string, format: date-time, nullable: true}
+        rechazado_en: {type: string, format: date-time, nullable: true}
+        motivo_rechazo: {type: string, maxLength: 300, nullable: true}
+        creado_en: {type: string, format: date-time}
+        modo_simulacion:
+          type: string
+          enum: [DESARROLLO_LOCAL, PRUEBAS]
+          description: Metadato de respuesta, no persistido en SQL
+        orden_validacion:
+          type: string
+          enum: [NO_VALIDADA]
+          description: Metadato de respuesta; no afirma que la orden exista o sea valida
+    PaginaPagos:
+      type: object
+      required: [items, total, limit, offset]
+      properties:
+        items: {type: array, items: {$ref: '#/components/schemas/Pago'}}
+        total: {type: integer, minimum: 0}
+        limit: {type: integer, minimum: 1, maximum: 100}
+        offset: {type: integer, minimum: 0}
+    SimularPagoRequest:
+      oneOf:
+        - type: object
+          additionalProperties: false
+          required: [resultado]
+          properties:
+            resultado:
+              type: string
+              enum: [APROBADO]
+        - type: object
+          additionalProperties: false
+          required: [resultado, motivo]
+          properties:
+            resultado:
+              type: string
+              enum: [RECHAZADO]
+            motivo:
+              type: string
+              minLength: 1
+              maxLength: 300
+              pattern: '.*\S.*'
+              description: Obligatorio y no vacio ni compuesto solo por espacios
+        - type: object
+          additionalProperties: false
+          required: [resultado, motivo]
+          properties:
+            resultado:
+              type: string
+              enum: [FALLIDO]
+            motivo:
+              type: string
+              minLength: 1
+              maxLength: 300
+              pattern: '.*\S.*'
+              description: Obligatorio y no vacio ni compuesto solo por espacios
+    CrearDetalleTarjetaRequest:
+      type: object
+      additionalProperties: false
+      required: [marca, ultimos4, titular, mes, anio, pais]
+      properties:
+        marca: {type: string, minLength: 1, maxLength: 20, example: VISA}
+        ultimos4: {type: string, pattern: '^[0-9]{4}$', example: '4242'}
+        titular: {type: string, minLength: 1, maxLength: 120, example: Cliente de prueba}
+        mes: {type: integer, minimum: 1, maximum: 12}
+        anio: {type: integer, minimum: 2020, maximum: 2100}
+        pais: {type: string, pattern: '^[A-Z]{2}$', example: EC}
+    DetalleTarjeta:
+      type: object
+      required: [id, pago_id, marca, ultimos4, titular, mes, anio, pais]
+      properties:
+        id: {$ref: '#/components/schemas/BigId'}
+        pago_id: {$ref: '#/components/schemas/BigId'}
+        marca: {type: string, maxLength: 20}
+        ultimos4: {type: string, pattern: '^[0-9]{4}$'}
+        titular: {type: string, maxLength: 120}
+        mes: {type: integer, minimum: 1, maximum: 12}
+        anio: {type: integer, minimum: 2020, maximum: 2100}
+        pais: {type: string, pattern: '^[A-Z]{2}$'}
+    CrearDetalleTransferenciaRequest:
+      type: object
+      additionalProperties: false
+      required: [banco, numero_comprobante, fecha_transferencia]
+      properties:
+        banco: {type: string, minLength: 1, maxLength: 60}
+        numero_comprobante: {type: string, minLength: 1, maxLength: 40}
+        fecha_transferencia: {type: string, format: date}
+        archivo_adjunto: {type: string, maxLength: 500, nullable: true}
+    DetalleTransferencia:
+      type: object
+      required: [id, pago_id, banco, numero_comprobante, fecha_transferencia]
+      properties:
+        id: {$ref: '#/components/schemas/BigId'}
+        pago_id: {$ref: '#/components/schemas/BigId'}
+        banco: {type: string, maxLength: 60}
+        numero_comprobante: {type: string, maxLength: 40}
+        fecha_transferencia: {type: string, format: date}
+        archivo_adjunto: {type: string, maxLength: 500, nullable: true}
+    Error:
+      description: El mensaje y los detalles no deben reflejar datos sensibles enviados por el cliente
+      type: object
+      required: [statusCode, code, message]
+      properties:
+        statusCode: {type: integer}
+        code: {type: string, example: PAYMENT_CONFLICT}
+        message: {type: string}
+        details: {type: object, additionalProperties: true}
+  responses:
+    BadRequest:
+      description: Parametros, formato o cuerpo invalidos
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Forbidden:
+      description: Simulacion deshabilitada o acceso no autorizado
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    NotFound:
+      description: Recurso de catalogo, pago o detalle inexistente
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Conflict:
+      description: Duplicado, estado final, detalle existente o pago aprobado para la orden
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+    Unprocessable:
+      description: Regla de negocio incumplida (monto, metodo, datos o transicion)
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/Error'}
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Esquema contractual propuesto, no implementado. La autenticacion y
+        autorizacion todavia no cuentan con infraestructura desplegada. La
+        operacion de simulacion requiere el permiso payment:simulate, expresado
+        en la operacion mediante x-required-permission.

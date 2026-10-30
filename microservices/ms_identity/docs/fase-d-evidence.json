@@ -1,0 +1,40 @@
+{
+  "checked_at_utc": "2026-10-29T01:39:42.017Z",
+  "phase": "D",
+  "base_url": "http://127.0.0.1:3011",
+  "app_image": "sha256:2e8d14eedbfe7a06c60087ea9c060340ab259627d7af014abd26615191a121e2",
+  "node_runtime": "v24.22.2",
+  "postgres_before": {
+    "database": "ms_identity",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": 5,
+    "domains": 3,
+    "roles": 3,
+    "users": 0,
+    "view": true
+  },
+  "public_registration": true,
+  "login_without_access_jwt": true,
+  "default_client_only": true,
+  "real_smtp_verification": true,
+  "refresh_rotation": true,
+  "logout_revokes_access": true,
+  "jwks_public_only": true,
+  "persisted_keys_and_sessions_after_restart": true,
+  "non_root": true,
+  "read_only_rootfs": true,
+  "read_only_key_mount": true,
+  "authentication_implemented": true,
+  "admin_bootstrap_implemented": false,
+  "swagger_implemented": false,
+  "postgres_after": {
+    "database": "ms_identity",
+    "version": "16.15 (Debian 16.15-1.pgdg12+2)",
+    "tables": 5,
+    "domains": 3,
+    "roles": 3,
+    "users": 0,
+    "view": true
+  },
+  "fixtures_removed": true
+}

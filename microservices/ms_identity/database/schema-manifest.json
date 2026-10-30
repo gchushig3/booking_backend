@@ -1,0 +1,283 @@
+{
+  "tables": {
+    "rol": {
+      "columns": [
+        {
+          "name": "rol_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": true,
+          "default": null
+        },
+        {
+          "name": "rol_nombre",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "rol_descripcion",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "rol_activo",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "default": "TRUE"
+        }
+      ]
+    },
+    "usuario": {
+      "columns": [
+        {
+          "name": "usu_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": true,
+          "default": null
+        },
+        {
+          "name": "usu_correo",
+          "type": "dom_correo",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_password",
+          "type": "VARCHAR(100)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_nombre",
+          "type": "VARCHAR(120)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_apellido",
+          "type": "VARCHAR(120)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_documento",
+          "type": "dom_documento",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_telefono",
+          "type": "dom_telefono",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_fecha_nacimiento",
+          "type": "DATE",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_avatar",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_verificado",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "default": "FALSE"
+        },
+        {
+          "name": "usu_activo",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "default": "TRUE"
+        },
+        {
+          "name": "usu_ultimo_acceso",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usu_creado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": "now()"
+        },
+        {
+          "name": "usu_actualizado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": "now()"
+        }
+      ]
+    },
+    "usuario_rol": {
+      "columns": [
+        {
+          "name": "usu_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "rol_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "usr_asignado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": "now()"
+        },
+        {
+          "name": "usr_asignado_por",
+          "type": "BIGINT",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        }
+      ]
+    },
+    "sesion": {
+      "columns": [
+        {
+          "name": "ses_id",
+          "type": "UUID",
+          "nullable": false,
+          "identity": false,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "usu_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "ses_token_hash",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "ses_ip",
+          "type": "VARCHAR(45)",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "ses_user_agent",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "ses_expira_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "ses_revocada",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "default": "FALSE"
+        },
+        {
+          "name": "ses_creado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": "now()"
+        }
+      ]
+    },
+    "token_verificacion": {
+      "columns": [
+        {
+          "name": "tokv_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": true,
+          "default": null
+        },
+        {
+          "name": "usu_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "tokv_token",
+          "type": "VARCHAR(128)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "tokv_tipo",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "tokv_expira_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": null
+        },
+        {
+          "name": "tokv_usado",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "default": "FALSE"
+        },
+        {
+          "name": "tokv_creado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "default": "now()"
+        }
+      ]
+    }
+  }
+}

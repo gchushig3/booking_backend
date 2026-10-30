@@ -1,0 +1,566 @@
+{
+  "tables": {
+    "operador": {
+      "columns": [
+        {
+          "name": "ope_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "ope_codigo",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_nombre",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_ruc",
+          "type": "dom_ruc",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_correo",
+          "type": "dom_correo",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_telefono",
+          "type": "dom_telefono",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_direccion",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "prov_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_activo",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "TRUE"
+        },
+        {
+          "name": "ope_creado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "now()"
+        },
+        {
+          "name": "ope_actualizado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "now()"
+        }
+      ]
+    },
+    "operador_usuario": {
+      "columns": [
+        {
+          "name": "ope_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "usu_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "opeu_cargo",
+          "type": "VARCHAR(60)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "opeu_activo",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "TRUE"
+        }
+      ]
+    },
+    "categoria": {
+      "columns": [
+        {
+          "name": "cat_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "cat_padre_id",
+          "type": "INTEGER",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "cat_nombre",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "cat_slug",
+          "type": "VARCHAR(80)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "cat_descripcion",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "cat_icono",
+          "type": "VARCHAR(40)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "'map-pin'"
+        },
+        {
+          "name": "cat_orden",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "0"
+        },
+        {
+          "name": "cat_activa",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "TRUE"
+        }
+      ]
+    },
+    "idioma": {
+      "columns": [
+        {
+          "name": "idi_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "idi_codigo",
+          "type": "CHAR(2)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "idi_nombre",
+          "type": "VARCHAR(50)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        }
+      ]
+    },
+    "inclusion": {
+      "columns": [
+        {
+          "name": "inc_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "inc_tipo",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "inc_nombre",
+          "type": "VARCHAR(150)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "inc_orden",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "0"
+        }
+      ]
+    },
+    "atraccion": {
+      "columns": [
+        {
+          "name": "atr_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "atr_uuid",
+          "type": "UUID",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "atr_nombre",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_slug",
+          "type": "VARCHAR(220)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_descripcion",
+          "type": "TEXT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_descripcion_corta",
+          "type": "VARCHAR(280)",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_tipo",
+          "type": "VARCHAR(30)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_estado",
+          "type": "VARCHAR(20)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "'BORRADOR'"
+        },
+        {
+          "name": "atr_latitud",
+          "type": "NUMERIC(10,6)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_longitud",
+          "type": "NUMERIC(10,6)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_direccion",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_punto_encuentro",
+          "type": "VARCHAR(255)",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_duracion_horas",
+          "type": "NUMERIC(5,2)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_moneda",
+          "type": "dom_moneda",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "'USD'"
+        },
+        {
+          "name": "ciu_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "ope_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "atr_cancelacion_gratuita",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "FALSE"
+        },
+        {
+          "name": "atr_horas_cancelacion",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "24"
+        },
+        {
+          "name": "atr_destacada",
+          "type": "BOOLEAN",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "FALSE"
+        },
+        {
+          "name": "atr_calificacion_promedio",
+          "type": "NUMERIC(3,2)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "0"
+        },
+        {
+          "name": "atr_numero_resenas",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "0"
+        },
+        {
+          "name": "atr_creado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "now()"
+        },
+        {
+          "name": "atr_actualizado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "now()"
+        },
+        {
+          "name": "atr_eliminado_en",
+          "type": "TIMESTAMPTZ",
+          "nullable": true,
+          "identity": false,
+          "primary": false,
+          "default": null
+        }
+      ]
+    },
+    "atraccion_categoria": {
+      "columns": [
+        {
+          "name": "atr_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "cat_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        }
+      ]
+    },
+    "atraccion_idioma": {
+      "columns": [
+        {
+          "name": "atr_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "idi_id",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        }
+      ]
+    },
+    "atraccion_inclusion": {
+      "columns": [
+        {
+          "name": "atr_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "inc_id",
+          "type": "INTEGER",
+          "nullable": false,
+          "identity": false,
+          "primary": true,
+          "default": null
+        }
+      ]
+    },
+    "atraccion_foto": {
+      "columns": [
+        {
+          "name": "fot_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": true,
+          "primary": true,
+          "default": null
+        },
+        {
+          "name": "atr_id",
+          "type": "BIGINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "fot_url",
+          "type": "VARCHAR(500)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "fot_alt",
+          "type": "VARCHAR(200)",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": null
+        },
+        {
+          "name": "fot_orden",
+          "type": "SMALLINT",
+          "nullable": false,
+          "identity": false,
+          "primary": false,
+          "default": "0"
+        }
+      ]
+    }
+  },
+  "domains": ["dom_correo", "dom_ruc", "dom_telefono", "dom_moneda"],
+  "view": "v_atraccion_completa"
+}

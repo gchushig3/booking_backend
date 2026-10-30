@@ -1,0 +1,21 @@
+name: ms-identity-test
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ms_identity_test
+      POSTGRES_USER: ${DB_USERNAME:?Run npm run env:test}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run npm run env:test}
+    ports: ['127.0.0.1:${DB_PORT:-5442}:5432']
+    volumes:
+      - identity-test-data:/var/lib/postgresql/data
+      - ./database/migrations:/identity-schema:ro
+      - ./database/docker-init.sh:/docker-entrypoint-initdb.d/010-identity.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d ms_identity_test']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: 'on-failure:3'
+volumes:
+  identity-test-data:

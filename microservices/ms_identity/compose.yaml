@@ -1,0 +1,78 @@
+﻿name: ms-identity
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ms_identity
+      POSTGRES_USER: ${DB_USERNAME:?Run npm run env:local}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Run npm run env:local}
+    ports: ['127.0.0.1:${DB_PORT:-5441}:5432']
+    volumes:
+      - identity-postgres-data:/var/lib/postgresql/data
+      - ./database/migrations:/identity-schema:ro
+      - ./database/docker-init.sh:/docker-entrypoint-initdb.d/010-identity.sh:ro
+    networks: [identity-internal, identity-local]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d ms_identity']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: 'on-failure:3'
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_DISABLE_VERSION_CHECK: 'true'
+    volumes: [identity-mailpit-data:/data]
+    ports:
+      [
+        '127.0.0.1:${MAILPIT_UI_PORT:-8025}:8025',
+        '127.0.0.1:${SMTP_PORT:-1025}:1025',
+      ]
+    networks: [identity-internal, identity-local]
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: 'on-failure:3'
+  app:
+    build:
+      {
+        context: ../..,
+        dockerfile: microservices/ms_identity/Dockerfile,
+        target: runtime,
+      }
+    environment:
+      NODE_ENV: production
+      APP_ENV: local
+      BOOKING_API_KEY: ${BOOKING_API_KEY:?Configure una API Key Booking de al menos 32 caracteres}
+      PORT: ${PORT:-3011}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:?Run npm run env:local}
+      DB_PASSWORD: ${DB_PASSWORD:?Run npm run env:local}
+      DB_DATABASE: ms_identity
+      SMTP_HOST: mailpit
+      SMTP_PORT: 1025
+      SMTP_FROM: ${SMTP_FROM:-noreply@identity.local}
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+      JWT_KEYRING_PATH: /run/identity-keys/identity.local.json
+    volumes: [./.keys:/run/identity-keys:ro]
+    ports: ['127.0.0.1:${PORT:-3011}:${PORT:-3011}']
+    depends_on:
+      postgres: { condition: service_healthy }
+      mailpit: { condition: service_healthy }
+    networks: [identity-internal, identity-local]
+    init: true
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: 'on-failure:3'
+volumes:
+  identity-postgres-data:
+  identity-mailpit-data:
+networks:
+  identity-internal: { internal: true }
+  identity-local: { driver: bridge }

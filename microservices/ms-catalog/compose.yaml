@@ -1,0 +1,76 @@
+name: ms-catalog
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ms_catalog
+      POSTGRES_USER: ${DB_USERNAME:?Genere .env con npm run env:local}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Genere .env con npm run env:local}
+    ports:
+      - '127.0.0.1:${DB_PORT:-5444}:5432'
+    volumes:
+      - catalog-postgres-data:/var/lib/postgresql/data
+      - ./database/migrations:/catalog-schema:ro
+      - ./database/docker-init.sh:/docker-entrypoint-initdb.d/010-catalog.sh:ro
+      - ./database/booking-projection.sql:/docker-entrypoint-initdb.d/020-booking-projection.sql:ro
+    networks:
+      - catalog-internal
+      - catalog-local
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d ms_catalog']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: 'on-failure:3'
+
+  app:
+    build:
+      context: ../..
+      dockerfile: microservices/ms-catalog/Dockerfile
+      target: runtime
+    environment:
+      NODE_ENV: production
+      AMQP_URL: ${AMQP_URL:?Configure la URL AMQPS de CloudAMQP}
+      AMQP_QUEUE: ms_catalog.events
+      CATALOG_EVENTS_QUEUE: ${CATALOG_EVENTS_QUEUE:-booking.catalog.events}
+      BOOKING_API_KEY: ${BOOKING_API_KEY:?Configure la misma clave que Identity}
+      IDENTITY_BASE_URL: ${IDENTITY_BASE_URL:-http://host.docker.internal:3011/api/v2}
+      INVENTORY_GRPC_URL: ${INVENTORY_GRPC_URL:-inventory.railway.internal:50051}
+      INVENTORY_GRPC_TLS: ${INVENTORY_GRPC_TLS:-false}
+      INVENTORY_PROTO_PATH: /app/contracts/inventory.proto
+      INVENTORY_SERVICE_ID: ${INVENTORY_SERVICE_ID:-NODE_ATR_DILAN}
+      PORT: ${PORT:-3014}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: ${DB_USERNAME:?Genere .env con npm run env:local}
+      DB_PASSWORD: ${DB_PASSWORD:?Genere .env con npm run env:local}
+      DB_DATABASE: ms_catalog
+    ports:
+      - '127.0.0.1:${PORT:-3014}:${PORT:-3014}'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - catalog-internal
+      - catalog-local
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: 'on-failure:3'
+    stop_grace_period: 15s
+
+volumes:
+  catalog-postgres-data:
+
+networks:
+  catalog-internal:
+    internal: true
+  catalog-local:
+    driver: bridge

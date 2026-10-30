@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-27",
+  "timezone": "America/Guayaquil",
+  "contract": "contract/ms_payment-openapi-v1.yaml",
+  "onlyBigIdChanged": true,
+  "unchangedFiles": {
+    "../02_microservicios_v2_bases_de_datos.sql": {
+      "sha256": "233a0f2f0ebcff2b41e99e9406c76dda22af9870fd31fee5bef1cef881c44dcf",
+      "unchanged": true
+    },
+    "init-payment.sql": {
+      "sha256": "c0dea989b1687e2f87d9eba85dd14838a94f030e43bc0fbb61d87e66ee7e6354",
+      "unchanged": true
+    },
+    "init-payment-test.sql": {
+      "sha256": "079b85f00248b4821adeede19b09dc5755db35425560d83ce41d8b70336af389",
+      "unchanged": true
+    },
+    "../../contracts/atracciones-openapi-v3.yaml": {
+      "sha256": "912eeb40f23ad466957c21bdf7aaa2942daff494187925ef9a056f3bd94ff817",
+      "unchanged": true
+    },
+    "package.json": {
+      "sha256": "a40e2a81d447e6ad714ee1f32392e43fdd608462653fc877f67ab449ad5b265d",
+      "unchanged": true
+    },
+    "package-lock.json": {
+      "sha256": "789eed2bf496e26566828ddb0e5400bcfddb4b84743696862689cb2a1ef22cfd",
+      "unchanged": true
+    },
+    "src/app.module.ts": {
+      "sha256": "c32cee963adf00e23a43d8cded2a871159734bb14139a66c3027eb4396960677",
+      "unchanged": true
+    }
+  },
+  "generatedUniqueStrings": 3421,
+  "explicitBoundaryAndTypeCases": 39,
+  "results": {
+    "build": "passed",
+    "lint": "passed",
+    "unit": 142,
+    "e2e": 11,
+    "integration": 54
+  },
+  "isolation": {
+    "NODE_ENV": "test",
+    "DB_HOST": "127.0.0.1",
+    "DB_PORT": 5434,
+    "DB_DATABASE": "ms_payment_test"
+  },
+  "cleanupAssertions": {
+    "pagos": 0,
+    "tarjetas": 0,
+    "transferencias": 0
+  },
+  "postRunDatabaseCheck": {
+    "database": "ms_payment_test",
+    "version": "17.11 (Debian 17.11-1.pgdg13+2)",
+    "remaining_integration_rows": 0
+  }
+}

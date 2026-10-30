@@ -1,0 +1,22 @@
+name: ms-catalog-test
+
+services:
+  postgres:
+    image: postgres:16-bookworm
+    environment:
+      POSTGRES_DB: ms_catalog_test
+      POSTGRES_USER: ${DB_USERNAME:?Genere .env.test con npm run env:test}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Genere .env.test con npm run env:test}
+    ports:
+      - '127.0.0.1:${DB_PORT:-5445}:5432'
+    volumes:
+      - catalog-test-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d ms_catalog_test']
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    restart: 'on-failure:3'
+
+volumes:
+  catalog-test-data:

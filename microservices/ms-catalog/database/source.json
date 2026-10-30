@@ -1,0 +1,6 @@
+{
+  "source": "02_microservicios_v2_bases_de_datos.sql",
+  "section": "ms_catalog",
+  "normalization": "LF; trim surrounding whitespace; final newline; exclude psql connect",
+  "sha256": "a2fa43418443e060597f967d67c28b7f40dcd21d95a60be382fad9fe44ace75e"
+}

@@ -1,0 +1,4703 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v2/auth/register": {
+      "post": {
+        "description": "Público; no requiere access JWT. Siempre CLIENTE; no acepta roles, active ni verified. Correo real capturado en Mailpit. Límite recovery: 3 por ruta/IP/email cada 15 minutos.",
+        "operationId": "AuthController_register",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RegisterResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "CONFLICT",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Registrar un CLIENTE",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/login": {
+      "post": {
+        "description": "Público; no requiere access JWT. Sin Authorization previo. Admite usuario activo aún no verificado. Credenciales inválidas: mensaje genérico. Límite: 5 intentos por minuto por ruta/IP/email.",
+        "operationId": "AuthController_login",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenPairResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Iniciar sesión y obtener tokens",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/refresh": {
+      "post": {
+        "description": "Público; no requiere access JWT. Usar refresh_token vigente, sin access JWT. Rotación atómica, sesión absoluta de siete días. Reutilización firmada revoca la sesión; serializar refresh en el cliente. 30 solicitudes/minuto/IP.",
+        "operationId": "AuthController_refresh",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RefreshDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenPairResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Renovar tokens",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/verify-email": {
+      "post": {
+        "description": "Público; no requiere access JWT. Token EMAIL recibido en Mailpit, expira en 24h y se consume una vez. Límite recovery: 3 por ruta/IP cada 15 minutos.",
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/VerificationDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Verificar correo",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/resend-verification": {
+      "post": {
+        "description": "Público; no requiere access JWT. Respuesta genérica; invalida el EMAIL anterior si la cuenta es elegible. Límite recovery: 3 por ruta/IP/email cada 15 minutos.",
+        "operationId": "AuthController_resend",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Reenviar verificación",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/forgot-password": {
+      "post": {
+        "description": "Público; no requiere access JWT. Respuesta genérica para cuentas desconocidas/inactivas/elegibles. Token RECUPERACION en Mailpit, expira en 15 minutos. Límite recovery: 3 por ruta/IP/email cada 15 minutos.",
+        "operationId": "AuthController_forgot",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EmailDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MessageResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Solicitar recuperación",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/reset-password": {
+      "post": {
+        "description": "Público; no requiere access JWT. Token RECUPERACION de un uso; revoca todas las sesiones y recuperaciones pendientes. Volver a login. Límite recovery: 3 por ruta/IP cada 15 minutos.",
+        "operationId": "AuthController_reset",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ResetPasswordDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "Retry-After": {
+                "description": "Segundos hasta poder reintentar.",
+                "schema": { "type": "integer" },
+                "example": 60
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Too Many Requests",
+                  "status": 429,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "TOO_MANY_REQUESTS",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Restablecer contraseña",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/me": {
+      "get": {
+        "description": "Requiere usuario, sesión y algún rol activos. ",
+        "operationId": "AuthController_me",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthMeResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Consultar identidad autenticada",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/logout": {
+      "post": {
+        "description": "Requiere usuario, sesión y algún rol activos. Revoca también el acceso con el access actual y la posibilidad de renovar esta sesión.",
+        "operationId": "AuthController_logout",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Cerrar sesión actual",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/logout-all": {
+      "post": {
+        "description": "Requiere usuario, sesión y algún rol activos. ",
+        "operationId": "AuthController_logoutAll",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Cerrar todas las sesiones propias",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/sessions": {
+      "get": {
+        "description": "Requiere usuario, sesión y algún rol activos. ",
+        "operationId": "AuthController_sessions",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/SessionResponse" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Listar sesiones propias vigentes",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/sessions/{id}": {
+      "delete": {
+        "description": "Requiere usuario, sesión y algún rol activos. Una sesión ajena se trata como inexistente (404).",
+        "operationId": "AuthController_revoke",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": { "type": "string", "format": "uuid" },
+            "description": "UUID v4 de la sesión propia."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Revocar una sesión propia",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/auth/change-password": {
+      "patch": {
+        "description": "Requiere usuario, sesión y algún rol activos. Contraseña actual incorrecta: 401. La nueva debe diferir. Revoca todas las sesiones, incluida esta, y los tokens de recuperación pendientes.",
+        "operationId": "AuthController_change",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ChangePasswordDto" }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Cambiar contraseña con la actual",
+        "tags": ["Autenticación"]
+      }
+    },
+    "/api/v2/.well-known/jwks.json": {
+      "get": {
+        "description": "Público; no requiere access JWT. Solo parámetros públicos RSA. Cache-Control: public, max-age=60. No contiene privadas ni secretos.",
+        "operationId": "JwksController_keys",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/JwksResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Obtener JWKS público",
+        "tags": ["Claves públicas"]
+      }
+    },
+    "/api/v2/auth/booking/verify-api-key": {
+      "get": {
+        "operationId": "BookingConsumerController_verify",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["valid", "consumer"],
+                  "properties": {
+                    "valid": { "type": "boolean", "enum": [true] },
+                    "consumer": { "type": "string", "enum": ["booking"] }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "API Key invalida" }
+        },
+        "security": [{ "booking-api-key": [] }],
+        "summary": "Verificar credenciales de consumidor Booking",
+        "tags": ["Integracion Booking"]
+      }
+    },
+    "/api/v2/auth/booking/introspect": {
+      "post": {
+        "operationId": "BookingConsumerController_introspect",
+        "parameters": [
+          {
+            "name": "X-API-Key",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["access_token"],
+                "additionalProperties": false,
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8192
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["userId", "sessionId", "roles"],
+                  "properties": {
+                    "userId": { "type": "string" },
+                    "sessionId": { "type": "string", "format": "uuid" },
+                    "roles": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "API Key, JWT o sesion invalidos" }
+        },
+        "security": [{ "booking-api-key": [] }],
+        "summary": "Validar JWT, sesion vigente y roles del consumidor",
+        "tags": ["Integracion Booking"]
+      }
+    },
+    "/api/v2/users/me": {
+      "get": {
+        "description": "Requiere usuario, sesión y algún rol activos. ",
+        "operationId": "UsersController_me",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Consultar perfil propio",
+        "tags": ["Usuarios"]
+      },
+      "patch": {
+        "description": "Requiere usuario, sesión y algún rol activos. Al menos un campo editable. No admite email, password, roles, active ni verified. Opcionales SQL aceptan null. Documento duplicado: 409.",
+        "operationId": "UsersController_profile",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/ProfileDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "CONFLICT",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Actualizar perfil propio",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/users": {
+      "get": {
+        "description": "Requiere ADMIN activo. Orden por ID ascendente; incluye usuarios inactivos y solo roles actualmente activos.",
+        "operationId": "UsersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1,
+              "example": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "example": 20,
+              "type": "integer"
+            }
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UsersPageResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Listar usuarios con paginación",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/users/{id}": {
+      "get": {
+        "description": "Requiere ADMIN activo. ",
+        "operationId": "UsersController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "example": "1"
+            },
+            "description": "ID BIGINT decimal, máximo 9223372036854775807. Mantener como string."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Consultar un usuario",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/users/{id}/status": {
+      "patch": {
+        "description": "Requiere ADMIN activo. Desactivar revoca todas sus sesiones y tokens pendientes. Reactivar no revive sesiones. Auto-desactivación y pérdida del último ADMIN activo: 409.",
+        "operationId": "UsersController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "example": "1"
+            },
+            "description": "ID BIGINT decimal, máximo 9223372036854775807. Mantener como string."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/StatusDto" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "CONFLICT",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Cambiar estado de un usuario",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/users/{id}/roles": {
+      "get": {
+        "description": "Requiere ADMIN activo. Incluye asignaciones de roles inactivos, sin conceder permisos por ellos.",
+        "operationId": "UsersController_assignments",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "example": "1"
+            },
+            "description": "ID BIGINT decimal, máximo 9223372036854775807. Mantener como string."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/AssignmentResponse" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Listar asignaciones de roles",
+        "tags": ["Usuarios"]
+      },
+      "post": {
+        "description": "Requiere ADMIN activo. Editar roles propios: 403. Rol duplicado/inactivo: 409. Conserva asignador/fecha y revoca sesiones afectadas; nuevo login requerido.",
+        "operationId": "UsersController_assign",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "example": "1"
+            },
+            "description": "ID BIGINT decimal, máximo 9223372036854775807. Mantener como string."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AssignRoleDto" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AssignmentResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "CONFLICT",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Asignar un rol a otro usuario",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/users/{id}/roles/{roleId}": {
+      "delete": {
+        "description": "Requiere ADMIN activo. Editar roles propios: 403; último ADMIN activo: 409. Revoca sesiones afectadas; no puede asignarse ADMIN mediante el perfil.",
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,18}$",
+              "maxLength": 19,
+              "example": "1"
+            },
+            "description": "ID BIGINT decimal, máximo 9223372036854775807. Mantener como string."
+          },
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32767,
+              "example": 2
+            },
+            "description": "ID SMALLINT del rol."
+          },
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Bad Request",
+                  "status": 400,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "BAD_REQUEST",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Not Found",
+                  "status": 404,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "NOT_FOUND",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Conflict",
+                  "status": 409,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "CONFLICT",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Retirar un rol de otro usuario",
+        "tags": ["Usuarios"]
+      }
+    },
+    "/api/v2/roles": {
+      "get": {
+        "description": "Requiere ADMIN activo. Incluye ADMIN, OPERADOR y CLIENTE sembrados por SQL y su estado actual. Roles inactivos no conceden permisos.",
+        "operationId": "RolesController_list",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/RoleResponse" }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              },
+              "WWW-Authenticate": {
+                "schema": { "type": "string" },
+                "example": "Bearer"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Unauthorized",
+                  "status": 401,
+                  "detail": "Invalid or expired credentials.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "UNAUTHORIZED",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Forbidden",
+                  "status": 403,
+                  "detail": "Request rejected.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "FORBIDDEN",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [{ "bearer": [] }],
+        "summary": "Listar roles",
+        "tags": ["Roles"]
+      }
+    },
+    "/api/v2/health/live": {
+      "get": {
+        "description": "Público; no requiere access JWT. ",
+        "operationId": "HealthController_live",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Comprobar proceso HTTP",
+        "tags": ["Salud"]
+      }
+    },
+    "/api/v2/health/ready": {
+      "get": {
+        "description": "Público; no requiere access JWT. Ejecuta SELECT 1; devuelve 503 si PostgreSQL no responde. No comprueba SMTP ni esquema.",
+        "operationId": "HealthController_ready",
+        "parameters": [
+          {
+            "name": "X-Correlation-Id",
+            "in": "header",
+            "description": "Identificador opcional; se devuelve en la respuesta.",
+            "required": false,
+            "schema": { "type": "string", "example": "cid-identity-example" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operación exitosa.",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Internal Server Error",
+                  "status": 500,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "INTERNAL_SERVER_ERROR",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "headers": {
+              "X-Correlation-Id": {
+                "description": "Identificador de correlación propagado o generado.",
+                "schema": { "type": "string" },
+                "example": "cid-identity-example"
+              }
+            },
+            "content": {
+              "application/problem+json": {
+                "schema": { "$ref": "#/components/schemas/ProblemResponse" },
+                "example": {
+                  "type": "about:blank",
+                  "title": "Service Unavailable",
+                  "status": 503,
+                  "detail": "Service unavailable or internal error.",
+                  "instance": "/api/v2/auth/me",
+                  "code": "SERVICE_UNAVAILABLE",
+                  "correlation_id": "cid-identity-example",
+                  "timestamp": "2026-10-29T12:00:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "summary": "Comprobar conexión PostgreSQL",
+        "tags": ["Salud"]
+      }
+    }
+  },
+  "info": {
+    "title": "Descubre EC — Identity & Access Service",
+    "description": "API interna de Identity. Registro/login públicos; usar access_token en Authorize para operaciones protegidas. ADMIN inicial mediante CLI local, nunca registro público. Roles vigentes en PostgreSQL. Mailpit local permite completar verificación y recuperación. Todos los errores utilizan application/problem+json; BIGINT se serializa como string.",
+    "version": "2.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [{ "url": "/" }],
+  "components": {
+    "securitySchemes": {
+      "booking-api-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      },
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http",
+        "description": "Pegar solo access_token obtenido por POST /api/v2/auth/login; no usar refresh_token."
+      }
+    },
+    "schemas": {
+      "ProblemResponse": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "example": "about:blank" },
+          "title": { "type": "string", "example": "Unauthorized" },
+          "status": { "type": "integer", "example": 401 },
+          "detail": {
+            "type": "string",
+            "example": "Invalid or expired credentials."
+          },
+          "instance": { "type": "string", "example": "/api/v2/auth/me" },
+          "code": { "type": "string", "example": "UNAUTHORIZED" },
+          "correlation_id": {
+            "type": "string",
+            "example": "cid-identity-example"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-29T12:00:00.000Z"
+          },
+          "errors": {
+            "description": "Mensajes de validación, solo cuando corresponda.",
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "detail",
+          "instance",
+          "code",
+          "correlation_id",
+          "timestamp"
+        ],
+        "additionalProperties": false
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "9007199254740993",
+            "pattern": "^[1-9][0-9]{0,18}$",
+            "description": "BIGINT PostgreSQL como string, nunca Number."
+          },
+          "email": {
+            "type": "string",
+            "example": "ana@example.test",
+            "maxLength": 160
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Ana",
+            "maxLength": 120
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Prueba",
+            "maxLength": 120
+          },
+          "document": { "type": "string", "nullable": true, "example": null },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "example": "+593999999999"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": null
+          },
+          "avatar_url": { "type": "string", "nullable": true, "example": null },
+          "verified": { "type": "boolean", "example": false },
+          "active": { "type": "boolean", "example": true },
+          "roles": {
+            "example": ["CLIENTE"],
+            "description": "Solo roles activos; un usuario inactivo no obtiene acceso.",
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "last_login_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": null
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-29T12:00:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-10-29T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "first_name",
+          "last_name",
+          "document",
+          "phone",
+          "birth_date",
+          "avatar_url",
+          "verified",
+          "active",
+          "roles",
+          "last_login_at",
+          "created_at",
+          "updated_at"
+        ],
+        "additionalProperties": false
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/UserResponse" },
+          "verification_email_sent": {
+            "type": "boolean",
+            "example": true,
+            "description": "Entrega SMTP real; false permite solicitar reenvío, sin deshacer el registro."
+          }
+        },
+        "required": ["user", "verification_email_sent"],
+        "additionalProperties": false
+      },
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            "description": "Se recorta y convierte a minúsculas; compatible con dom_correo.",
+            "example": "ana@example.test"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 12,
+            "maxLength": 72,
+            "description": "Mínimo 12 caracteres Unicode, máximo 72 bytes UTF-8 y sin NUL; no se recorta ni normaliza.",
+            "example": "Una-clave-local-segura-42!"
+          },
+          "first_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Se recorta; no puede quedar vacío.",
+            "example": "Ana"
+          },
+          "last_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Se recorta; no puede quedar vacío.",
+            "example": "Prueba"
+          }
+        },
+        "required": ["email", "password", "first_name", "last_name"],
+        "additionalProperties": false
+      },
+      "TokenPairResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "JWT RS256 de acceso. Copiar su valor en Authorize, sin el prefijo Bearer."
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "JWT refresh, solo para /auth/refresh. Reemplazar ambos tokens tras renovar."
+          },
+          "token_type": {
+            "type": "string",
+            "enum": ["Bearer"],
+            "example": "Bearer"
+          },
+          "expires_in": {
+            "type": "integer",
+            "example": 900,
+            "description": "Segundos restantes del access; nunca supera la sesión."
+          },
+          "refresh_expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-05T12:00:00.000Z"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in",
+          "refresh_expires_at"
+        ],
+        "additionalProperties": false
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            "description": "Se recorta y convierte a minúsculas; compatible con dom_correo.",
+            "example": "ana@example.test"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 1,
+            "maxLength": 72,
+            "description": "Mínimo 1 caracteres Unicode, máximo 72 bytes UTF-8 y sin NUL; no se recorta ni normaliza.",
+            "example": "Una-clave-local-segura-42!"
+          }
+        },
+        "required": ["email", "password"],
+        "additionalProperties": false
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8192,
+            "writeOnly": true,
+            "description": "Refresh obtenido por login/renovación. Se rota; reutilizarlo revoca la sesión. No necesita access JWT."
+          }
+        },
+        "required": ["refresh_token"],
+        "additionalProperties": false
+      },
+      "VerificationDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "minLength": 43,
+            "maxLength": 43,
+            "writeOnly": true,
+            "description": "Token opaco de un uso recibido en Mailpit; no es JWT."
+          }
+        },
+        "required": ["token"],
+        "additionalProperties": false
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "If the account is eligible, an email will be sent."
+          }
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      },
+      "EmailDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$",
+            "description": "Se recorta y convierte a minúsculas; compatible con dom_correo.",
+            "example": "ana@example.test"
+          }
+        },
+        "required": ["email"],
+        "additionalProperties": false
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$",
+            "minLength": 43,
+            "maxLength": 43,
+            "writeOnly": true,
+            "description": "Token opaco de un uso recibido en Mailpit; no es JWT."
+          },
+          "new_password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 12,
+            "maxLength": 72,
+            "description": "Mínimo 12 caracteres Unicode, máximo 72 bytes UTF-8 y sin NUL; no se recorta ni normaliza.",
+            "example": "Una-clave-local-segura-42!"
+          }
+        },
+        "required": ["token", "new_password"],
+        "additionalProperties": false
+      },
+      "AuthMeResponse": {
+        "type": "object",
+        "properties": {
+          "user": { "$ref": "#/components/schemas/UserResponse" },
+          "session_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "c228d067-e81c-42d5-a514-e22ad293895b"
+          }
+        },
+        "required": ["user", "session_id"],
+        "additionalProperties": false
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "ip": { "type": "string", "nullable": true, "example": "127.0.0.1" },
+          "user_agent": {
+            "type": "string",
+            "nullable": true,
+            "example": "Swagger UI"
+          },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "current": { "type": "boolean", "example": true }
+        },
+        "required": [
+          "id",
+          "ip",
+          "user_agent",
+          "expires_at",
+          "created_at",
+          "current"
+        ],
+        "additionalProperties": false
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 1,
+            "maxLength": 72,
+            "description": "Mínimo 1 caracteres Unicode, máximo 72 bytes UTF-8 y sin NUL; no se recorta ni normaliza.",
+            "example": "Una-clave-local-segura-42!"
+          },
+          "new_password": {
+            "type": "string",
+            "format": "password",
+            "writeOnly": true,
+            "minLength": 12,
+            "maxLength": 72,
+            "description": "Mínimo 12 caracteres Unicode, máximo 72 bytes UTF-8 y sin NUL; no se recorta ni normaliza.",
+            "example": "Una-clave-local-segura-42!"
+          }
+        },
+        "required": ["current_password", "new_password"],
+        "additionalProperties": false
+      },
+      "PublicJwkResponse": {
+        "type": "object",
+        "properties": {
+          "kty": { "type": "string", "enum": ["RSA"] },
+          "n": {
+            "type": "string",
+            "description": "Módulo RSA público en base64url."
+          },
+          "e": { "type": "string", "example": "AQAB" },
+          "alg": { "type": "string", "enum": ["RS256"] },
+          "use": { "type": "string", "enum": ["sig"] },
+          "kid": { "type": "string", "format": "uuid" }
+        },
+        "required": ["kty", "n", "e", "alg", "use", "kid"],
+        "additionalProperties": false
+      },
+      "JwksResponse": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/PublicJwkResponse" }
+          }
+        },
+        "required": ["keys"],
+        "additionalProperties": false
+      },
+      "ProfileDto": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Ana",
+            "description": "Trim; no permite null ni blanco."
+          },
+          "last_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "example": "Prueba",
+            "description": "Trim; no permite null ni blanco."
+          },
+          "document": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 20,
+            "pattern": "^(?:[0-9]{10}|[A-Z]{1,2}[0-9]{6,9})$",
+            "example": null
+          },
+          "phone": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\+?[0-9]{7,15}$",
+            "example": "+593999999999"
+          },
+          "birth_date": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            "example": "2000-02-29",
+            "description": "Fecha real, año >= 0001. null permite limpiar."
+          },
+          "avatar_url": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 255,
+            "example": "https://example.test/avatar.jpg",
+            "description": "Solo HTTP/HTTPS con protocolo y sin credenciales; null permite limpiar."
+          }
+        },
+        "additionalProperties": false,
+        "minProperties": 1
+      },
+      "UsersPageResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/UserResponse" }
+          },
+          "total": { "type": "integer", "example": 1 },
+          "page": { "type": "integer", "example": 1 },
+          "limit": { "type": "integer", "example": 20 }
+        },
+        "required": ["items", "total", "page", "limit"],
+        "additionalProperties": false
+      },
+      "StatusDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean",
+            "example": false,
+            "description": "false revoca sesiones/tokens pendientes. No permite auto-desactivación ADMIN."
+          }
+        },
+        "required": ["active"],
+        "additionalProperties": false
+      },
+      "AssignmentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32767,
+            "example": 1
+          },
+          "name": { "type": "string", "example": "ADMIN", "maxLength": 30 },
+          "description": {
+            "type": "string",
+            "example": "Administrador del sistema",
+            "maxLength": 200
+          },
+          "active": { "type": "boolean", "example": true },
+          "assigned_at": { "type": "string", "format": "date-time" },
+          "assigned_by": {
+            "type": "string",
+            "nullable": true,
+            "example": null,
+            "description": "BIGINT del actor; null en el bootstrap."
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "active",
+          "assigned_at",
+          "assigned_by"
+        ],
+        "additionalProperties": false
+      },
+      "AssignRoleDto": {
+        "type": "object",
+        "properties": {
+          "role_id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32767,
+            "example": 2,
+            "description": "Rol existente y activo. No se editan roles propios."
+          }
+        },
+        "required": ["role_id"],
+        "additionalProperties": false
+      },
+      "RoleResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 32767,
+            "example": 1
+          },
+          "name": { "type": "string", "example": "ADMIN", "maxLength": 30 },
+          "description": {
+            "type": "string",
+            "example": "Administrador del sistema",
+            "maxLength": 200
+          },
+          "active": { "type": "boolean", "example": true }
+        },
+        "required": ["id", "name", "description", "active"],
+        "additionalProperties": false
+      },
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["UP"], "example": "UP" }
+        },
+        "required": ["status"],
+        "additionalProperties": false
+      }
+    }
+  }
+}

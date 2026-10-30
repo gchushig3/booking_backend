@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.*
+!.env.example
+*.log
+*.tsbuildinfo
+.idea/
+.vscode/
+.DS_Store
+deploy.zip
+publish_profile.xml

@@ -1,0 +1,6 @@
+{
+  "source": "02_microservicios_v2_bases_de_datos.sql",
+  "section": "ms_identity",
+  "normalization": "LF; trim surrounding whitespace; final newline; exclude psql connect",
+  "sha256": "84fa0e694dece975a098b4d22b725b589fb94fe0f071d8f4872740a2ddedb204"
+}

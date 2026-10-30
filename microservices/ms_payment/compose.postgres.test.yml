@@ -1,0 +1,24 @@
+services:
+  postgres-test:
+    image: postgres:17
+    container_name: ms_payment_postgres_test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:?Falta DB_USERNAME en .env.test.local}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Falta DB_PASSWORD en .env.test.local}
+      POSTGRES_DB: ms_payment_test
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - payment_test_pgdata:/var/lib/postgresql/data
+      - ./init-payment-test.sql:/docker-entrypoint-initdb.d/10-init-payment.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  payment_test_pgdata:

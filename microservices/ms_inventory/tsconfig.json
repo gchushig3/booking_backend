@@ -1,23 +1,9 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2023",
-    "sourceMap": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "strictPropertyInitialization": false,
-    "types": ["vitest/globals", "node"]
+    "module": "NodeNext", "moduleResolution": "NodeNext", "target": "ES2023",
+    "experimentalDecorators": true, "emitDecoratorMetadata": true, "isolatedModules": true,
+    "strict": true, "esModuleInterop": true, "skipLibCheck": true,
+    "rootDir": "src", "outDir": "dist", "types": ["node"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts"]
 }

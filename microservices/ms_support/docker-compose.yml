@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: pg_ms_support
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ms_support
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_ms_support_data:/var/lib/postgresql/data
+      - ./init-support.sql:/docker-entrypoint-initdb.d/02_ms_support.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d ms_support']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg_ms_support_data:

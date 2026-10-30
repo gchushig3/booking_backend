@@ -1,0 +1,26 @@
+{
+  "checked_at_utc": "2026-10-29T23:31:23.870Z",
+  "phase": "E",
+  "base_url": "http://127.0.0.1:3011",
+  "bootstrap_cli_and_idempotence": true,
+  "admin_login_and_access": true,
+  "client_denied_admin": true,
+  "own_profile": true,
+  "role_change_revokes_sessions": true,
+  "operator_denied_admin": true,
+  "deactivation_rejects_login": true,
+  "self_deactivation_rejected": true,
+  "postgres_before": {
+    "users": 0,
+    "roles": 3,
+    "tables": 5,
+    "domains": 3
+  },
+  "postgres_after": {
+    "users": 0,
+    "roles": 3,
+    "tables": 5,
+    "domains": 3
+  },
+  "fixtures_removed": true
+}

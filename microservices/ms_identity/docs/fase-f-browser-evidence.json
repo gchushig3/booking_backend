@@ -1,0 +1,16 @@
+{
+  "checked_at_utc": "2026-10-29T23:53:57.748Z",
+  "phase": "F",
+  "browser": "Chrome headless, isolated temporary profile",
+  "swagger_ui_loaded": true,
+  "rendered_operations": 25,
+  "try_it_out_registration_201": true,
+  "try_it_out_public_login_200": true,
+  "swagger_bearer_authorized": true,
+  "auth_me_200": true,
+  "users_me_200": true,
+  "client_admin_operation_403": true,
+  "admin_operations_200": true,
+  "public_login_omits_bearer": true,
+  "bearer_not_persisted": true
+}
