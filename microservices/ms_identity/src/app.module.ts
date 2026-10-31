@@ -16,6 +16,7 @@ import { UsersModule } from './users/users.module.js';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: (source: Record<string, unknown>) => ({
+        ...source,
         identity: validateEnvironment(source),
       }),
     }),

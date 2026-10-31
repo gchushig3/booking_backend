@@ -15,9 +15,11 @@ async function bootstrap(): Promise<void> {
   configureApplication(app, env.CORS_ORIGINS);
   await app.listen(env.PORT, '0.0.0.0');
 }
-void bootstrap().catch(() => {
+void bootstrap().catch((error: unknown) => {
+  // Solo el mensaje: los errores de configuración no incluyen valores secretos.
+  const reason = error instanceof Error ? error.message : 'unknown error';
   process.stderr.write(
-    'ms-identity: startup failed; check local configuration and PostgreSQL.\n',
+    `ms-identity: startup failed: ${reason.slice(0, 300)}\n`,
   );
   process.exitCode = 1;
 });

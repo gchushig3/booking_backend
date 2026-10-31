@@ -1,8 +1,18 @@
+# Dependencias y archivos generados
 **/node_modules
 **/dist
 **/.npm-cache
-**/.env*
+**/coverage
+**/*.tsbuildinfo
+**/*.log
+
+# Variables de entorno y credenciales
+**/.env
+**/.env.*
 **/.keys
 **/*.pem
 **/*.key
+
+# Git
 .git
+**/.git

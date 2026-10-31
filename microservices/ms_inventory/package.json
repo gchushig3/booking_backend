@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "start:dev": "tsc -p tsconfig.json && node dist/main.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.mjs\"",
     "lint": "oxlint --type-aware src/ test/",
     "typecheck": "tsc --noEmit",

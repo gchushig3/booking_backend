@@ -3,7 +3,8 @@ import type { IdentityEnvironment } from '../config/environment.js';
 
 export const AUTH_SETTINGS = Symbol('AUTH_SETTINGS');
 export interface AuthSettings {
-  keyringPath: string;
+  keyringPath?: string;
+  keyringJson?: string;
   issuer: string;
   accessAudience: string;
   refreshAudience: string;
@@ -31,15 +32,30 @@ export function authSettings(config: ConfigService): AuthSettings {
     if (value < min || value > max) throw new Error(`Invalid ${key}`);
     return value;
   }
+  const configuredPath = config.get<string>('JWT_KEYRING_PATH')?.trim();
+  const keyringJson = config.get<string>('JWT_KEYRING_JSON')?.trim();
+  if (configuredPath && keyringJson)
+    throw new Error('Configure only one of JWT_KEYRING_PATH or JWT_KEYRING_JSON');
   const keyringPath =
-    config.get<string>('JWT_KEYRING_PATH') ??
-    (env.APP_ENV === 'test'
-      ? '.keys/identity.test.json'
-      : '.keys/identity.local.json');
-  if (env.APP_ENV === 'production' && !config.get<string>('JWT_KEYRING_PATH'))
-    throw new Error('Production requires an explicit keyring path');
-  if (typeof keyringPath !== 'string' || !keyringPath.trim())
+    configuredPath ??
+    (keyringJson
+      ? undefined
+      : env.APP_ENV === 'test'
+        ? '.keys/identity.test.json'
+        : env.APP_ENV === 'production'
+          ? undefined
+          : '.keys/identity.local.json');
+  if (env.APP_ENV === 'production' && !keyringPath && !keyringJson)
+    throw new Error('Production requires JWT_KEYRING_PATH or JWT_KEYRING_JSON');
+  if (!keyringPath && !keyringJson)
     throw new Error('Invalid JWT_KEYRING_PATH');
+  if (keyringJson) {
+    try {
+      JSON.parse(keyringJson);
+    } catch {
+      throw new Error('Invalid JWT_KEYRING_JSON');
+    }
+  }
   const issuer = config.get<string>('JWT_ISSUER') ?? 'urn:descubreec:identity';
   if (
     typeof issuer !== 'string' ||
@@ -50,6 +66,7 @@ export function authSettings(config: ConfigService): AuthSettings {
     throw new Error('Invalid JWT_ISSUER');
   return {
     keyringPath,
+    keyringJson,
     issuer,
     accessAudience: 'urn:descubreec:internal-api',
     refreshAudience: 'urn:descubreec:identity:refresh',

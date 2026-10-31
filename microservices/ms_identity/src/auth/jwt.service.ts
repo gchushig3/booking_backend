@@ -28,9 +28,13 @@ export class IdentityJwtService implements OnModuleInit {
   private publicSet: JSONWebKeySet = { keys: [] };
   constructor(@Inject(AUTH_SETTINGS) private readonly settings: AuthSettings) {}
   async onModuleInit(): Promise<void> {
-    const ring = JSON.parse(
-      await readFile(this.settings.keyringPath, 'utf8'),
-    ) as Keyring;
+    const source =
+      this.settings.keyringJson ??
+      (this.settings.keyringPath
+        ? await readFile(this.settings.keyringPath, 'utf8')
+        : undefined);
+    if (!source) throw new Error('JWT keyring is not configured');
+    const ring = JSON.parse(source) as Keyring;
     if (
       typeof ring.activeKid !== 'string' ||
       !Array.isArray(ring.keys) ||

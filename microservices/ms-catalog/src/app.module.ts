@@ -18,6 +18,7 @@ import { AttractionsModule } from './modules/attractions/attractions.module.js';
     ConfigModule.forRoot({
       isGlobal: true,
       validate: (source: Record<string, unknown>) => ({
+        ...source,
         catalog: validateEnvironment(source),
       }),
     }),

@@ -112,7 +112,9 @@ describe('Real RSA keyring and token separation', () => {
       ],
     };
     settings.keyringPath = join(directory, 'keyring.json');
-    await writeFile(settings.keyringPath, JSON.stringify(ring));
+    const keyringPath = settings.keyringPath;
+    if (!keyringPath) throw new Error('Keyring path not configured in test');
+    await writeFile(keyringPath, JSON.stringify(ring));
     jwt = new IdentityJwtService(settings);
     await jwt.onModuleInit();
   });
@@ -142,6 +144,23 @@ describe('Real RSA keyring and token separation', () => {
     await expect(
       jwt.verify(tokens.access_token, 'refresh'),
     ).rejects.toMatchObject({ status: 401 });
+  });
+  it('loads the RSA keyring from a secret environment value', async () => {
+    const inMemory = new IdentityJwtService({
+      ...settings,
+      keyringPath: undefined,
+      keyringJson: JSON.stringify(ring),
+    });
+    await inMemory.onModuleInit();
+    const tokens = await inMemory.issue(
+      '42',
+      randomUUID(),
+      ['CLIENTE'],
+      new Date(Date.now() + 3600000),
+    );
+    expect((await inMemory.verify(tokens.access_token, 'access')).sub).toBe(
+      '42',
+    );
   });
   it('rejects forged tokens and expired signed access tokens', async () => {
     const tokens = await jwt.issue(
@@ -176,7 +195,9 @@ describe('Real RSA keyring and token separation', () => {
       publicJwk: pair.publicKey.export({ format: 'jwk' }),
       privateJwk: pair.privateKey.export({ format: 'jwk' }),
     });
-    await writeFile(settings.keyringPath, JSON.stringify(ring));
+    const keyringPath = settings.keyringPath;
+    if (!keyringPath) throw new Error('Keyring path not configured in test');
+    await writeFile(keyringPath, JSON.stringify(ring));
     const rotated = new IdentityJwtService(settings);
     await rotated.onModuleInit();
     expect((await rotated.verify(old.access_token, 'access')).sub).toBe('1');
@@ -216,6 +237,23 @@ describe('Password hashing and safe configuration', () => {
         }),
       ),
     ).toThrow('JWT_KEYRING_PATH');
+    expect(() =>
+      authSettings(
+        new ConfigService({
+          identity: { APP_ENV: 'production' },
+          JWT_KEYRING_JSON: '{invalid',
+        }),
+      ),
+    ).toThrow('JWT_KEYRING_JSON');
+    expect(() =>
+      authSettings(
+        new ConfigService({
+          identity: { APP_ENV: 'production' },
+          JWT_KEYRING_PATH: '/run/secrets/identity.json',
+          JWT_KEYRING_JSON: '{}',
+        }),
+      ),
+    ).toThrow('only one');
   });
   it('uses real bcrypt and denies unknown accounts even after the dummy comparison', async () => {
     const service = new PasswordService(settings);
@@ -229,7 +267,15 @@ describe('Password hashing and safe configuration', () => {
   it('requires an explicit production keyring and disallows low bcrypt cost outside tests', () => {
     expect(() =>
       authSettings(new ConfigService({ identity: { APP_ENV: 'production' } })),
-    ).toThrow('explicit keyring');
+    ).toThrow('JWT_KEYRING_PATH or JWT_KEYRING_JSON');
+    expect(
+      authSettings(
+        new ConfigService({
+          identity: { APP_ENV: 'production' },
+          JWT_KEYRING_JSON: '{}',
+        }),
+      ).keyringJson,
+    ).toBe('{}');
     expect(() =>
       authSettings(
         new ConfigService({

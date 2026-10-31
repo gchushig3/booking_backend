@@ -330,6 +330,8 @@ export class AuthService {
     email: string,
     purpose: 'EMAIL' | 'RECUPERACION',
   ): Promise<{ message: string }> {
+    if (!this.mail.enabled)
+      throw new ServiceUnavailableException('Email delivery is disabled.');
     const user = await this.source.manager
       .createQueryBuilder(UsuarioEntity, 'u')
       .where('lower(u.usu_correo) = :email', { email })

@@ -72,8 +72,8 @@ export function validateEnvironment(
         'Test environment must target the isolated test database or local development database',
       );
     }
-  } else if (database !== 'ms_payment') {
-    throw new Error('DB_DATABASE must be ms_payment');
+  } else if (!['ms_payment', 'db_payment'].includes(database)) {
+    throw new Error('DB_DATABASE must be ms_payment or db_payment');
   }
 
   return {

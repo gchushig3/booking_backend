@@ -6,21 +6,25 @@ import type { OnModuleDestroy } from '@nestjs/common';
 import type { IdentityEnvironment } from '../config/environment.js';
 @Injectable()
 export class IdentityMailService implements OnModuleDestroy {
-  private readonly transport: Transporter;
-  private readonly from: string;
+  private readonly transport?: Transporter;
+  private readonly from?: string;
+  readonly enabled: boolean;
   private readonly logger = new Logger(IdentityMailService.name);
   constructor(config: ConfigService) {
     const env = config.getOrThrow<IdentityEnvironment>('identity');
-    if (env.APP_ENV === 'production')
-      throw new Error(
-        'Production SMTP transport needs an approved configuration',
-      );
+    this.enabled = env.SMTP_ENABLED;
+    if (!this.enabled) return;
     this.from = env.SMTP_FROM;
+    const secure = env.SMTP_PORT === 465;
     this.transport = nodemailer.createTransport({
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
-      secure: false,
-      ignoreTLS: true,
+      secure,
+      requireTLS: env.APP_ENV === 'production' && !secure,
+      ignoreTLS: false,
+      ...(env.SMTP_USER && env.SMTP_PASS
+        ? { auth: { user: env.SMTP_USER, pass: env.SMTP_PASS } }
+        : {}),
       connectionTimeout: 5000,
       greetingTimeout: 5000,
       socketTimeout: 5000,
@@ -35,6 +39,7 @@ export class IdentityMailService implements OnModuleDestroy {
     purpose: 'EMAIL' | 'RECUPERACION',
     token: string,
   ): Promise<boolean> {
+    if (!this.transport) return false;
     try {
       const result = await this.transport.sendMail({
         from: this.from,
@@ -52,6 +57,6 @@ export class IdentityMailService implements OnModuleDestroy {
     }
   }
   onModuleDestroy(): void {
-    this.transport.close();
+    this.transport?.close();
   }
 }

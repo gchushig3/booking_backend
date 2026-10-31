@@ -49,6 +49,10 @@ creación exclusiva de lock y reemplazo mediante archivo temporal. Permisos 0600
 en sistemas que los aplican; en Windows deben mantenerse las ACL del usuario local.
 Compose monta `.keys` en `/run/identity-keys` de solo lectura; app ejecuta como node.
 En host, JWT_KEYRING_PATH puede fijar otro archivo; en Compose el path es explícito.
+En despliegues administrados, se puede inyectar el JSON completo del keyring como
+secreto `JWT_KEYRING_JSON` en lugar de montar un archivo. Configure exactamente
+una de las dos variables. No copie claves privadas locales a la imagen ni al
+repositorio; `APP_ENV=production` exige una fuente explícita de keyring.
 Issuer aprobado por defecto; modificarlo requiere coordinar todos los verificadores.
 
 ```sh

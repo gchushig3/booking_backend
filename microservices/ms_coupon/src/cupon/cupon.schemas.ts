@@ -37,7 +37,7 @@ export const createCuponSchema = {
         properties: { cup_tipo: { const: 'PORCENTAJE' } },
         required: ['cup_tipo'],
       },
-      then: { properties: { cup_valor: { maximum: 100 } } },
+      then: { properties: { cup_valor: { type: 'number', maximum: 100 } } },
     },
   ],
 };

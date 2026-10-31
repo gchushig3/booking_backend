@@ -85,18 +85,23 @@ explícita; Compose no carga automáticamente todas sus variables dentro de app.
 | NODE_ENV / APP_ENV                      | Valores .env                             | production / local                                                   |
 | DB_HOST / DB_PORT                       | 127.0.0.1 / 5441                         | postgres / 5432                                                      |
 | DB_DATABASE                             | ms_identity                              | ms_identity                                                          |
+| Neon DATABASE_URL                       | Base de datos db_identity o ms_identity | Base de datos db_identity o ms_identity                              |
 | DB_USERNAME / DB_PASSWORD               | .env local                               | Se transmiten desde .env                                             |
 | SMTP_HOST / SMTP_PORT                   | 127.0.0.1 / 1025                         | mailpit / 1025                                                       |
 | PORT / SMTP_FROM / CORS_ORIGINS         | .env o valores predeterminados           | Se transmiten desde .env                                             |
 | JWT_KEYRING_PATH                        | .keys/identity.local.json predeterminado | /run/identity-keys/identity.local.json                               |
+| JWT_KEYRING_JSON                        | No configurado                           | Secreto alternativo a JWT_KEYRING_PATH                               |
 | JWT_ISSUER / TTL / bcrypt / rate limits | Configurables mediante .env              | Predeterminados de AuthSettings; Compose no transmite esos overrides |
 
 Predeterminados aprobados: issuer urn:descubreec:identity, access 900 segundos,
 sesión absoluta siete días, bcrypt cost 12, login 5/min, recovery 3/15min y refresh
 30/min. Para personalizar Docker hace falta configurar explícitamente environment
 de Compose y coordinar el contrato, respetando las validaciones de AuthSettings.
-APP_ENV identifica el alcance local aunque NODE_ENV use build de producción.
-APP_ENV=production rechaza el transporte SMTP local hasta aprobar otro transporte.
+APP_ENV identifica el alcance; por defecto sigue NODE_ENV (production -> production),
+pero Compose local lo establece explícitamente a local. En producción, SMTP requiere
+credenciales SMTP y TLS (implicit TLS en puerto 465 o STARTTLS en otros puertos).
+Configure `SMTP_USER` y `SMTP_PASS` como secretos; el transporte autenticado usa
+ambos en Nodemailer.
 
 No copiar .env, .env.test, .env.admin.local o .keys a Git, imagen, logs o paquetes
 de entrega compartidos. Mantener las ACL del usuario local en Windows. Los archivos

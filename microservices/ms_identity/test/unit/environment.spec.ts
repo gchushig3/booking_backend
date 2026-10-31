@@ -55,6 +55,19 @@ describe('Identity configuration', () => {
       }).DB_DATABASE,
     ).toBe('ms_identity_test');
   });
+  it('accepts the production Neon database alias from DATABASE_URL', () => {
+    const env = validateEnvironment({
+      ...valid,
+      APP_ENV: undefined,
+      NODE_ENV: 'production',
+      DATABASE_URL:
+        'postgresql://identity:secret@db.example.test/db_identity?sslmode=require',
+      SMTP_USER: 'identity@example.test',
+      SMTP_PASS: 'non-operational-fixture',
+    });
+    expect(env.APP_ENV).toBe('production');
+    expect(env.DB_DATABASE).toBe('db_identity');
+  });
   it('allows a production Node build in an explicitly local Compose environment', () => {
     expect(
       validateEnvironment({ ...valid, NODE_ENV: 'production' }).APP_ENV,
@@ -67,5 +80,55 @@ describe('Identity configuration', () => {
         CORS_ORIGINS: 'http://localhost:5173,https://example.com',
       }).CORS_ORIGINS,
     ).toEqual(['http://localhost:5173', 'https://example.com']);
+  });
+  it('does not require SMTP when SMTP_ENABLED=false in production', () => {
+    const env = validateEnvironment({
+      ...valid,
+      APP_ENV: undefined,
+      NODE_ENV: 'production',
+      SMTP_HOST: '',
+      SMTP_FROM: '',
+      SMTP_USER: '',
+      SMTP_PASS: '',
+      SMTP_ENABLED: 'false',
+    });
+    expect(env).toMatchObject({ APP_ENV: 'production', SMTP_ENABLED: false });
+    expect(env.SMTP_HOST).toBeUndefined();
+    expect(env.SMTP_USER).toBeUndefined();
+  });
+  it('validates SMTP strictly when enabled and rejects invalid flags', () => {
+    const production = {
+      ...valid,
+      APP_ENV: 'production',
+      NODE_ENV: 'production',
+    };
+    expect(() =>
+      validateEnvironment({ ...production, SMTP_ENABLED: 'true' }),
+    ).toThrow('Production requires SMTP_USER and SMTP_PASS');
+    expect(() =>
+      validateEnvironment({ ...production, SMTP_ENABLED: 'true', SMTP_HOST: '' }),
+    ).toThrow();
+    expect(() =>
+      validateEnvironment({ ...valid, SMTP_ENABLED: 'maybe' }),
+    ).toThrow('Invalid SMTP_ENABLED');
+  });
+  it('requires paired SMTP credentials and authentication in production', () => {
+    expect(() =>
+      validateEnvironment({
+        ...valid,
+        APP_ENV: 'production',
+        NODE_ENV: 'production',
+        SMTP_USER: 'identity@example.test',
+      }),
+    ).toThrow('SMTP_USER and SMTP_PASS');
+    expect(() =>
+      validateEnvironment({
+        ...valid,
+        APP_ENV: 'production',
+        NODE_ENV: 'production',
+        SMTP_USER: 'identity@example.test',
+        SMTP_PASS: 'non-operational-fixture',
+      }),
+    ).not.toThrow();
   });
 });
