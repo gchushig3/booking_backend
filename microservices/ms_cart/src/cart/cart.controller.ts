@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
   Param,
@@ -47,6 +48,26 @@ export class CartController {
       request.principal.userId,
       idempotencyKey(key),
       body,
+    );
+  }
+  @Delete()
+  clear(@Req() request: SagaHttpRequest) {
+    return this.service.clear(request.principal.userId);
+  }
+  @Get('reservations')
+  list(@Req() request: SagaHttpRequest) {
+    return this.service.list(request.principal.userId);
+  }
+  @Post('reservations/:id/cancel')
+  @HttpCode(202)
+  cancel(
+    @Req() request: SagaHttpRequest,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.service.cancel(
+      request.principal.userId,
+      id,
+      request.headers.authorization ?? '',
     );
   }
   @Get('reservations/:id')

@@ -16,6 +16,17 @@ async function bootstrap(): Promise<void> {
   configureOpenApi(app);
 
   const config = app.get(ConfigService);
+  const corsOrigins = (
+    config.get<string>('CORS_ORIGINS') ?? 'http://localhost:4200'
+  )
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+  app.enableCors({
+    origin: corsOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
   app.connectMicroservice(
     rabbitMqOptions(
       config,

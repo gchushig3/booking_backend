@@ -47,7 +47,7 @@ $settings = @{
   INVENTORY_GRPC_URL                 = 'booking-puce.brazilsouth.cloudapp.azure.com:50051'
   INVENTORY_GRPC_TLS                 = 'false'
   INVENTORY_PROTO_PATH               = '/home/site/wwwroot/contracts/inventory.proto'
-  INVENTORY_SERVICE_ID               = 'NODE_ATR_DILAN'
+  INVENTORY_SERVICE_ID               = 'NODE_ATR_GLORIA'
   IDENTITY_BASE_URL                  = 'http://localhost:3011/api/v2'
   BOOKING_API_KEY                    = -join ((1..48) | ForEach-Object { '{0:x}' -f (Get-Random -Max 16) })
 }

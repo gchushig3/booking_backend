@@ -34,7 +34,7 @@ service InventoryStockService {
 // Mensaje de actualización puntual de stock e inventario
 message StockUpdateMessage {
   // Código único asignado a la tienda socia registrado en el Booking Gateway
-  // Ejemplo: "NODE_ATR_DILAN", "NODE_ATR_CRUCEROS_01", "NODE_ATR_QUITO_02"
+  // Ejemplo: "NODE_ATR_GLORIA", "NODE_ATR_CRUCEROS_01", "NODE_ATR_QUITO_02"
   string service_id = 1;
 
   // Identificador único o slug de la atracción en el catálogo compartido
@@ -89,7 +89,7 @@ message StockChangeEvent {
   // UUID v4 único del evento para deduplicación idempotente
   string event_id = 1;
 
-  // Código de la tienda socia emisora (ej. "NODE_ATR_DILAN")
+  // Código de la tienda socia emisora (ej. "NODE_ATR_GLORIA")
   string service_id = 2;
 
   // ID de la atracción o tour

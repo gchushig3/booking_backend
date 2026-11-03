@@ -25,6 +25,7 @@ export const sagaBindings = {
     "pago.procesado",
     "pago.fallido",
     "pago_fallido",
+    "pago.reembolsado",
   ],
   ms_refund: ["pago.reembolsado"],
 } as const;

@@ -58,20 +58,61 @@ export class ConfirmedEventPublisher implements OnApplicationShutdown {
     const auditQueue = this.config.get<string>("AMQP_AUDIT_QUEUE");
     if (auditQueue && auditQueue !== queue)
       await this.publishToQueue(auditQueue, event);
+    const exchange = this.config.get<string>("AMQP_EXCHANGE");
+    if (exchange) await this.publishToExchange(exchange, event);
+  }
+
+  private async publishToExchange<T>(
+    exchange: string,
+    event: DomainEvent<T>,
+  ): Promise<void> {
+    const channelWrapper = this.ensureChannel();
+    const key = `exchange:${exchange}`;
+    if (!this.queues.has(key)) {
+      this.queues.set(
+        key,
+        channelWrapper
+          .addSetup(async (channel: ConfirmChannel) => {
+            await channel.assertExchange(exchange, "topic", { durable: true });
+          })
+          .catch((error: unknown) => {
+            this.queues.delete(key);
+            throw error;
+          }),
+      );
+    }
+    await this.queues.get(key);
+    await channelWrapper.publish(
+      exchange,
+      event.tipo,
+      Buffer.from(JSON.stringify(event)),
+      {
+        persistent: true,
+        contentType: "application/json",
+        messageId: event.eventoId,
+        correlationId: event.correlationId,
+        timeout: 10000,
+      },
+    );
+  }
+
+  private ensureChannel(): ChannelWrapper {
+    if (!this.channel) {
+      this.connection = connect([amqpUrl(this.config)]);
+      this.channel = this.connection.createChannel({ confirm: true });
+    }
+    return this.channel;
   }
 
   private async publishToQueue<T>(
     queue: string,
     event: DomainEvent<T>,
   ): Promise<void> {
-    if (!this.channel) {
-      this.connection = connect([amqpUrl(this.config)]);
-      this.channel = this.connection.createChannel({ confirm: true });
-    }
+    const channelWrapper = this.ensureChannel();
     if (!this.queues.has(queue)) {
       this.queues.set(
         queue,
-        this.channel
+        channelWrapper
           .addSetup(async (channel: ConfirmChannel) => {
             await channel.assertQueue(queue, { durable: true });
           })
@@ -83,7 +124,7 @@ export class ConfirmedEventPublisher implements OnApplicationShutdown {
     }
     await this.queues.get(queue);
     // Envelope compatible con @EventPattern(event.tipo) de NestJS.
-    await this.channel.sendToQueue(
+    await channelWrapper.sendToQueue(
       queue,
       Buffer.from(
         JSON.stringify({

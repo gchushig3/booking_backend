@@ -248,6 +248,48 @@ export class BookingCatalogService {
     };
   }
 
+  async availability(id: string, fecha: string, personas: number) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha)))
+      throw new BadRequestException('fecha invalida (YYYY-MM-DD)');
+    if (!Number.isInteger(personas) || personas < 1 || personas > 100)
+      throw new BadRequestException(
+        'personas debe ser un entero entre 1 y 100',
+      );
+    const item = await this.query()
+      .andWhere(
+        '(a.atr_uuid::text = :id OR a.atr_slug = :id OR a.atr_id::text = :id)',
+        { id },
+      )
+      .getOne();
+    if (!item)
+      throw new NotFoundException(
+        'Atraccion publicada con perfil Booking no encontrada',
+      );
+    const times = this.profile(item).schedule_times;
+    if (!times)
+      throw new ServiceUnavailableException(
+        'Sincronice schedule_times desde Inventory antes de consultar disponibilidad',
+      );
+    const slots: Array<{ hora: string; disponible: boolean }> = [];
+    for (const hora of times)
+      slots.push({
+        hora,
+        disponible: await this.inventory.available(
+          item.atr_uuid,
+          fecha,
+          hora,
+          personas,
+        ),
+      });
+    return {
+      atraccion_id: item.atr_uuid,
+      fecha,
+      personas,
+      disponible: slots.some((s) => s.disponible),
+      horarios: slots,
+    };
+  }
+
   async detail(id: string) {
     const item = await this.query()
       .andWhere(
@@ -263,6 +305,7 @@ export class BookingCatalogService {
     return {
       ...this.card(item),
       uuid: item.atr_uuid,
+      atr_id: item.atr_id,
       description: item.atr_descripcion,
       rating: {
         score: Number(item.atr_calificacion_promedio),

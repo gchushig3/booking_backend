@@ -46,16 +46,16 @@ $services = @(
       'AUTH_LOGIN_LIMIT=5','AUTH_RECOVERY_LIMIT=3') },
   @{ n='ms-inventory'; d='ms_inventory'; p=3017; ext=$true; amqp=$true; env=@(
       'SAGA_EXCHANGE=booking.saga.v1','AMQP_AUDIT_QUEUE=booking.audit.events','GRPC_HOST=0.0.0.0','GRPC_PORT=50051',
-      'INVENTORY_PROTO_PATH=/app/contracts/inventory.proto','INVENTORY_SERVICE_ID=NODE_ATR_DILAN') },
+      'INVENTORY_PROTO_PATH=/app/contracts/inventory.proto','INVENTORY_SERVICE_ID=NODE_ATR_GLORIA') },
   @{ n='ms-catalog'; d='ms-catalog'; p=8080; ext=$true; amqp=$true; env=@(
-      'AMQP_QUEUE=ms_catalog.events','AMQP_PREFETCH=10','CATALOG_EVENTS_QUEUE=booking.catalog.events',
+      'AMQP_QUEUE=ms_catalog.events','AMQP_PREFETCH=10','CATALOG_EVENTS_QUEUE=booking.catalog.events','AMQP_EXCHANGE=booking.events',
       'AMQP_AUDIT_QUEUE=booking.audit.events','AMQP_CATALOG_QUEUE=catalog.reviews',
       "INVENTORY_GRPC_URL=$grpcHost",'INVENTORY_GRPC_TLS=true','INVENTORY_PROTO_PATH=/app/contracts/inventory.proto',
-      'INVENTORY_SERVICE_ID=NODE_ATR_DILAN') },
+      'INVENTORY_SERVICE_ID=NODE_ATR_GLORIA') },
   @{ n='ms-cart'; d='ms_cart'; p=8080; ext=$false; amqp=$true; env=@(
       'SAGA_EXCHANGE=booking.saga.v1','AMQP_AUDIT_QUEUE=booking.audit.events',"CATALOG_BASE_URL=$(Url 'ms-catalog')/api/v2",
       "INVENTORY_GRPC_URL=$grpcHost",'INVENTORY_GRPC_TLS=true','INVENTORY_PROTO_PATH=/app/contracts/inventory.proto',
-      'INVENTORY_SERVICE_ID=NODE_ATR_DILAN','RESERVATION_TTL_SECONDS=900','PAYMENT_ALLOW_TEST_PAYLOADS=false') },
+      'INVENTORY_SERVICE_ID=NODE_ATR_GLORIA','RESERVATION_TTL_SECONDS=900','PAYMENT_ALLOW_TEST_PAYLOADS=false') },
   @{ n='ms-payment'; d='ms_payment'; p=8080; ext=$false; amqp=$true; env=@(
       'SAGA_EXCHANGE=booking.saga.v1','AMQP_AUDIT_QUEUE=booking.audit.events','SAGA_SIMULATION_ENABLED=true',
       'PAYMENT_SIMULATION_FAILURE_RATE=0.35','PAYMENT_ALLOW_TEST_PAYLOADS=false',
@@ -106,7 +106,9 @@ foreach ($s in $services) {
       @ingress --min-replicas 1 --max-replicas 1 --cpu 0.25 --memory 0.5Gi `
       --secrets @secretArgs --env-vars @envArgs -o none
   } else {
-    & $az containerapp secret set -g $rg -n $s.n --secrets @secretArgs -o none
+    $ErrorActionPreference = 'Continue'
+    & $az containerapp secret set -g $rg -n $s.n --secrets @secretArgs -o none 2>$null
+    $ErrorActionPreference = 'Stop'
     & $az containerapp update -g $rg -n $s.n --image $image --set-env-vars @envArgs -o none
   }
 }

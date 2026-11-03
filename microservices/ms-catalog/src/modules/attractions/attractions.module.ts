@@ -12,7 +12,10 @@ import { IdiomaEntity } from '../../database/entities/idioma.entity.js';
 import { InclusionEntity } from '../../database/entities/inclusion.entity.js';
 import { AttractionsService } from './attractions.service.js';
 import { AttractionsController } from './attractions.controller.js';
-import { BookingContractController } from './booking-contract.controller.js';
+import {
+  BookingContractController,
+  BookingRootHealthController,
+} from './booking-contract.controller.js';
 
 @Module({
   imports: [
@@ -29,7 +32,11 @@ import { BookingContractController } from './booking-contract.controller.js';
       InclusionEntity,
     ]),
   ],
-  controllers: [BookingContractController, AttractionsController],
+  controllers: [
+    BookingContractController,
+    BookingRootHealthController,
+    AttractionsController,
+  ],
   providers: [AttractionsService],
   exports: [AttractionsService],
 })

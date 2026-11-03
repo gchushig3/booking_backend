@@ -218,6 +218,75 @@ export class CartService {
     return row;
   }
 
+  async list(userId: string) {
+    return this.source.query(
+      `SELECT reservation_id AS "reservationId",state,paid,stock_confirmed AS "stockConfirmed",
+        created_at AS "createdAt",payload FROM saga_cart_reservation
+        WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100`,
+      [userId],
+    );
+  }
+
+  async clear(userId: string) {
+    return this.source.transaction(async (manager) => {
+      await lockSaga(manager, `cart:${userId}`);
+      const [cart] = await manager.query<Array<{ car_id: string }>>(
+        'SELECT car_id FROM carrito WHERE usu_id=$1 AND car_activo FOR UPDATE',
+        [userId],
+      );
+      if (cart) {
+        await manager.query('DELETE FROM saga_cart_line WHERE car_id=$1', [
+          cart.car_id,
+        ]);
+        await manager.query('DELETE FROM carrito_item WHERE car_id=$1', [
+          cart.car_id,
+        ]);
+      }
+      return { cleared: true };
+    });
+  }
+
+  async cancel(userId: string, id: string, authorization: string) {
+    const [row] = await this.source.query<ReservationRow[]>(
+      'SELECT state,paid,stock_confirmed,payload FROM saga_cart_reservation WHERE reservation_id=$1 AND user_id=$2',
+      [id, userId],
+    );
+    if (!row) throw new NotFoundException('Reservation not found');
+    if (row.state === 'CANCELLED')
+      return { reservationId: id, state: 'CANCELLED' };
+    if (row.state !== 'CONFIRMED')
+      throw new ConflictException(
+        'Solo se pueden cancelar reservas confirmadas; espere el resultado del pago',
+      );
+    const today = new Date().toISOString().slice(0, 10);
+    if (row.payload.lines.some((line) => line.date < today))
+      throw new ConflictException('La actividad ya ocurrió y no es reembolsable');
+    let response: Response;
+    try {
+      const base = this.config.getOrThrow<string>('REFUND_BASE_URL');
+      response = await fetch(`${base.replace(/\/$/, '')}/refunds`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization,
+        },
+        body: JSON.stringify({
+          pag_id: userId,
+          correlationId: id,
+          rem_numero: `RF-${id.replace(/-/g, '').slice(0, 12).toUpperCase()}`,
+          rem_monto: row.payload.amountCents / 100,
+          rem_motivo: 'Cancelación solicitada por el cliente',
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+    } catch {
+      throw new ServiceUnavailableException('Reembolsos no disponible');
+    }
+    if (!response.ok && response.status !== 409)
+      throw new ServiceUnavailableException('No se pudo solicitar el reembolso');
+    return { reservationId: id, state: 'REFUND_REQUESTED' };
+  }
+
   async event(event: SagaEvent) {
     await this.store.consume(event, async (manager) => {
       const [row] = await manager.query<ReservationRow[]>(
@@ -229,7 +298,8 @@ export class CartService {
         if (sagaHash(original) !== sagaHash(row.payload))
           throw new PermanentSagaError('Reservation payload changed');
       }
-      if (!row || row.state === 'CANCELLED' || row.state === 'CONFIRMED')
+      if (!row || row.state === 'CANCELLED') return;
+      if (row.state === 'CONFIRMED' && event.tipo !== 'pago.reembolsado')
         return;
       if (
         [

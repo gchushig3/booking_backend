@@ -40,7 +40,7 @@ services:
       INVENTORY_GRPC_URL: ${INVENTORY_GRPC_URL:-inventory.railway.internal:50051}
       INVENTORY_GRPC_TLS: ${INVENTORY_GRPC_TLS:-false}
       INVENTORY_PROTO_PATH: /app/contracts/inventory.proto
-      INVENTORY_SERVICE_ID: ${INVENTORY_SERVICE_ID:-NODE_ATR_DILAN}
+      INVENTORY_SERVICE_ID: ${INVENTORY_SERVICE_ID:-NODE_ATR_GLORIA}
       PORT: ${PORT:-3014}
       DB_HOST: postgres
       DB_PORT: 5432

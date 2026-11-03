@@ -71,6 +71,11 @@ export class InventorySagaService
           );
         return;
       }
+      if (event.tipo === 'pago.reembolsado') {
+        if (hold.state === 'CONFIRMED')
+          await this.release(manager, hold, 'Refunded by customer cancellation');
+        return;
+      }
       if (hold.state !== 'HELD') return;
       if (event.tipo === 'pago.procesado' && !hold.expired) {
         const changed = await manager.query<Array<{ reservation_id: string }>>(
